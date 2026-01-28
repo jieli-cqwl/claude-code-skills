@@ -1,0 +1,425 @@
+---
+name: experts
+command: experts
+user_invocable: true
+description: Agent 编排模式。当面对复杂任务需要多种专业知识时使用，协调多个专家 Agent（后端架构师、前端架构师、安全审计员等）共同完成任务。
+---
+
+> **角色**：技术导演，协调多专家攻克复杂问题
+> **目标**：让对的专家做对的事，整合多视角方案
+> **原则**：明确分工、并行执行、冲突调解、方案整合
+> **流程**：复杂任务开始时使用
+> **思考模式**：启用 ultrathink 深度思考，确保任务分解和方案整合全面准确
+
+# Agent 编排模式 (Agent Orchestration)
+
+> **来源**: 基于 [majiayu000/claude-arsenal](https://github.com/majiayu000/claude-arsenal) 的 Agent 编排理念
+
+---
+
+## 依赖规范
+
+各专家 Agent 执行时应遵循对应的领域规范：
+
+| 专家角色 | 依赖规范 |
+|---------|---------|
+| **backend-architect** | `.claude/rules/代码质量.md`、`.claude/rules/性能效率.md` |
+| **frontend-architect** | `.claude/rules/代码质量.md`、`.claude/rules/全栈开发.md` |
+| **security-auditor** | `.claude/rules/代码质量.md`（安全性章节） |
+| **code-reviewer** | `.claude/rules/代码质量.md`、`.claude/rules/代码清洁.md` |
+
+> **职责分离**：本 Skill 定义 Agent 编排**流程**，`rules/` 定义各领域**标准**。
+
+---
+
+## 核心理念
+
+**"专业分工，协同作战"**
+
+复杂任务不是由单一通用 AI 解决，而是由多个专家 Agent 各司其职、协调完成。
+
+就像一个技术团队：
+- 技术负责人（Tech Lead）统筹全局
+- 后端架构师负责 API 和数据设计
+- 前端架构师负责 UI 和交互
+- 安全审计员检查漏洞
+- 代码审查员把关质量
+
+---
+
+## 何时使用
+
+| 场景 | 使用 |
+|------|------|
+| 涉及前后端的全栈任务 | ✅ 推荐 |
+| 需要安全审计的变更 | ✅ 推荐 |
+| 架构设计决策 | ✅ 推荐 |
+| 代码审查 | ✅ 可用 |
+| 简单的单文件修改 | ❌ 过度 |
+| 纯探索性任务 | ❌ 使用 /explore |
+
+---
+
+## 专家 Agent 清单
+
+| Agent | 专长领域 | 触发场景 |
+|-------|---------|---------|
+| **tech-lead** | 项目全局、任务分解、协调整合 | 复杂任务启动时 |
+| **backend-architect** | Python/FastAPI、API 设计、数据库 | 后端架构决策 |
+| **frontend-architect** | React/Vue、H5、交互设计 | 前端架构决策 |
+| **security-auditor** | 安全漏洞、合规性、权限控制 | 安全相关变更 |
+| **code-reviewer** | 代码质量、最佳实践、测试 | 代码审查 |
+
+---
+
+## 执行流程
+
+```
+用户请求
+    ↓
+Tech Lead 分析
+├── 理解任务背景和目标
+├── 识别需要的专家
+├── 分解为子任务
+└── 分配给专家 Agent
+    ↓
+专家 Agent 执行
+├── backend-architect: API + 数据模型
+├── frontend-architect: UI + 交互
+├── security-auditor: 安全检查
+└── code-reviewer: 质量审查
+    ↓
+Tech Lead 整合
+├── 收集各专家输出
+├── 解决冲突和矛盾
+├── 形成一致方案
+└── 呈现最终结果
+```
+
+---
+
+## Agent 协作机制
+
+### 任务分派
+
+Tech Lead 使用标准格式向专家分派任务：
+
+```markdown
+# 专家任务分派
+
+## 基本信息
+- **任务 ID**: ORCH-001
+- **目标专家**: backend-architect
+- **优先级**: P1 高
+
+## 任务描述
+[清晰的目标和预期输出]
+
+## 依赖信息
+[前置任务的输出、需要的上下文]
+
+## 输出格式要求
+[专家应如何格式化输出]
+```
+
+详见模板：`templates/task-dispatch.md`
+
+### 信息流转
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Tech Lead                               │
+│  - 持有全局上下文                                            │
+│  - 负责收集和传递信息                                        │
+│  - 专家不直接通信，通过 Tech Lead 中转                       │
+└─────────────────────────────────────────────────────────────┘
+        ↓ 分派任务 + 上下文        ↑ 返回输出
+┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│ backend-arch  │ │ frontend-arch │ │ security-aud  │
+│ (独立执行)    │ │ (独立执行)    │ │ (独立执行)    │
+└───────────────┘ └───────────────┘ └───────────────┘
+```
+
+### 依赖处理
+
+当任务之间有依赖时：
+
+1. **识别依赖**：Tech Lead 分析任务间的依赖关系
+2. **顺序调度**：先调度无依赖的任务，收到输出后再调度依赖任务
+3. **传递输出**：将前置任务的输出作为后续任务的输入
+
+```
+示例：前端依赖后端 API 设计
+
+1. Tech Lead → backend-architect: "设计登录 API"
+2. backend-architect 返回: API 设计文档
+3. Tech Lead → frontend-architect: "设计登录 UI" + [API 设计文档]
+4. frontend-architect 基于 API 设计完成 UI 设计
+```
+
+### 输出整合
+
+专家输出的标准格式：
+
+```markdown
+# [专家角色] 任务报告
+
+## 任务信息
+- **任务 ID**: ORCH-001
+- **完成时间**: YYYY-MM-DD HH:mm
+
+## 交付物
+[具体输出内容]
+
+## 后续建议
+[需要其他专家关注的事项]
+
+## 风险和关注点
+[Tech Lead 需要关注的风险]
+```
+
+---
+
+## 协调模式
+
+### 模式 1: 串行协调
+
+```
+task → backend-architect → frontend-architect → security-auditor → 完成
+```
+
+**适用场景**：有明确依赖关系的任务
+
+### 模式 2: 并行协调
+
+```
+task → ┬─ backend-architect  ─┬→ 整合 → 完成
+       ├─ frontend-architect ─┤
+       └─ security-auditor   ─┘
+```
+
+**适用场景**：可独立进行的多领域任务
+
+### 模式 3: 迭代协调
+
+```
+task → expert-A → review-by-B → expert-A 修改 → review-by-B → ... → 完成
+```
+
+**适用场景**：需要多轮反馈的设计任务
+
+---
+
+## 各专家 Agent 职责
+
+### Tech Lead（技术负责人）
+
+**角色**：项目全局把控、任务协调
+
+**职责**：
+- 分析用户请求，理解真实需求
+- 识别需要哪些专家参与
+- 将任务分解为可分配的子任务
+- 协调专家之间的交互
+- 整合输出，解决冲突
+
+**调用时机**：复杂任务启动时自动激活
+
+详见 `agents/tech-lead.md`
+
+### Backend Architect（后端架构师）
+
+**角色**：后端技术专家
+
+**专长**：
+- Python 3.10+ / FastAPI 架构
+- RESTful API 设计
+- 数据库设计（MySQL）
+- 缓存策略（Redis）
+- 性能优化
+
+**调用时机**：涉及后端 API、数据库、服务设计时
+
+详见 `agents/backend-architect.md`
+
+### Frontend Architect（前端架构师）
+
+**角色**：前端技术专家
+
+**专长**：
+- React 18 / Vue 3 架构
+- TypeScript 类型设计
+- 组件设计和状态管理
+- H5 移动端适配
+- 用户交互体验
+
+**调用时机**：涉及前端 UI、组件、交互设计时
+
+详见 `agents/frontend-architect.md`
+
+### Security Auditor（安全审计员）
+
+**角色**：安全专家
+
+**专长**：
+- OWASP Top 10 漏洞
+- 认证和授权
+- 数据加密
+- 输入验证
+- 合规性检查
+
+**调用时机**：涉及安全敏感功能时
+
+详见 `agents/security-auditor.md`
+
+### Code Reviewer（代码审查员）
+
+**角色**：质量把关
+
+**专长**：
+- 代码质量评估
+- 最佳实践检查
+- 测试覆盖验证
+- 性能问题发现
+- 可维护性分析
+
+**调用时机**：代码实现完成后
+
+详见 `agents/code-reviewer.md`
+
+---
+
+## 预定义工作流
+
+针对常见场景，提供预定义的工作流模板：
+
+| 工作流 | 适用场景 | 参与专家 | 文档位置 |
+|--------|---------|---------|---------|
+| **全栈功能开发** | 前后端同步开发的功能 | tech-lead + backend + frontend + reviewer | `workflows/fullstack-feature.md` |
+| **安全审计** | 安全敏感变更的审计 | tech-lead + security-auditor + reviewer | `workflows/security-audit.md` |
+| **架构评审** | 重大架构决策评审 | tech-lead + backend + frontend + security | `workflows/architecture-review.md` |
+
+使用时，Tech Lead 会根据任务类型自动选择合适的工作流。
+
+---
+
+## 使用示例
+
+### 示例 1: 新功能开发（使用 fullstack-feature 工作流）
+
+```
+用户: 我需要实现用户登录功能
+
+Tech Lead 分析:
+- 这是全栈任务
+- 需要：backend-architect（API）+ frontend-architect（UI）+ security-auditor（认证）
+- 选择工作流: fullstack-feature
+
+分配:
+1. backend-architect: 设计登录 API、JWT 机制
+2. frontend-architect: 设计登录表单、状态管理
+3. security-auditor: 审计认证流程安全性
+
+整合:
+- 确保前后端接口一致
+- 确保安全建议被采纳
+- 形成完整方案
+```
+
+详见 `workflows/fullstack-feature.md`
+
+### 示例 2: 安全审计（使用 security-audit 工作流）
+
+```
+用户: 检查最近的代码变更有没有安全问题
+
+Tech Lead 分析:
+- 这是安全审计任务
+- 主要需要：security-auditor
+- 选择工作流: security-audit
+
+分配:
+1. security-auditor: 审计变更代码
+2. code-reviewer: 辅助检查代码质量
+
+整合:
+- 合并安全和质量报告
+- 按严重程度排序
+```
+
+详见 `workflows/security-audit.md`
+
+---
+
+## 冲突解决
+
+当专家意见冲突时：
+
+### 优先级原则
+
+```
+安全性 > 正确性 > 性能 > 可维护性 > 风格
+```
+
+### 冲突处理流程
+
+1. **Tech Lead 识别冲突**
+2. **双方陈述理由**
+3. **按优先级判断**
+4. **无法判断则呈现给用户**
+
+### 常见冲突类型
+
+| 冲突 | 处理 |
+|------|------|
+| 性能 vs 安全 | 安全优先，性能次之 |
+| 便利性 vs 安全 | 安全优先 |
+| 前端 vs 后端 | 以接口契约为准 |
+| 代码风格 | 遵循项目规范 |
+
+---
+
+## 与其他 Skills 的关系
+
+```
+/clarify（需求澄清）
+    ↓
+/experts  ← 本技能
+    ├─ 调度各专家 Agent
+    ↓
+/plan（写计划）
+    ↓
+/run-plan（执行计划）
+```
+
+---
+
+## 危险信号
+
+- 简单任务使用编排（过度工程）
+- 专家之间持续冲突无法解决
+- 任务分解不清晰导致重复工作
+- 整合阶段发现根本性问题
+
+---
+
+## 完成检查清单
+
+- [ ] 任务已正确分解
+- [ ] 合适的专家已被分配
+- [ ] 各专家输出已收集
+- [ ] 冲突已解决
+- [ ] 最终方案已整合
+- [ ] 用户已确认结果
+
+---
+
+## ✅ 完成提示
+
+当专家协作完成后，输出：
+
+```
+✅ 专家协作完成
+
+下一步：根据专家建议执行 /plan（写计划）或 /run-plan（执行计划）
+```
