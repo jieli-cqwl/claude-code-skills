@@ -6,13 +6,91 @@
 
 ---
 
+## 🚨 门控检查（必须先通过）
+
+> **测试先行原则**：没有测试的开发不是 TDD
+
+**在执行任何任务之前，必须先通过门控检查。**
+
+### 门控检查命令
+
+```bash
+# 门控1: 检查 AC 来源文档
+CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+if [ -z "$CLARIFY_DOC" ]; then
+  echo "❌ 门控1失败: AC 来源文档不存在"
+  echo "   修复: 执行 /clarify 生成需求文档和 AC 表格"
+  exit 1
+else
+  echo "✅ 门控1通过: $CLARIFY_DOC"
+fi
+
+# 门控2: 检查计划文档引用 AC（非重新定义）
+PLAN_DOC=$(ls docs/开发文档/plan_*.md 2>/dev/null | head -1)
+if [ -z "$PLAN_DOC" ]; then
+  echo "❌ 门控2失败: 计划文档不存在"
+  echo "   修复: 执行 /plan 生成计划文档"
+  exit 1
+fi
+if grep -q "引用.*AC\|AC.*来源" "$PLAN_DOC"; then
+  echo "✅ 门控2通过: 计划引用 AC"
+else
+  echo "⚠️ 门控2警告: 计划可能重新定义了 AC，请检查"
+fi
+
+# 门控3: 检查测试文件
+TEST_FILE=$(ls tests/test_*_acceptance.py tests/test_*.py 2>/dev/null | head -1)
+if [ -z "$TEST_FILE" ]; then
+  echo "❌ 门控3失败: 测试文件不存在"
+  echo "   修复: 执行 /test-gen from-clarify $CLARIFY_DOC"
+  exit 1
+else
+  echo "✅ 门控3通过: $TEST_FILE"
+fi
+
+echo "✅ 所有门控检查通过，可以继续执行"
+```
+
+### 门控失败处理
+
+如果任何门控检查失败，按以下流程修复：
+
+```
+门控1失败（AC 文档不存在）
+    ↓
+执行 /clarify 生成需求文档
+    ↓ 输出: docs/需求文档/clarify_[功能名].md
+
+门控2失败（计划文档问题）
+    ↓
+执行 /plan 生成计划文档
+    ↓ 确保引用 /clarify 的 AC，不重新定义
+
+门控3失败（测试文件不存在）
+    ↓
+执行 /test-gen from-clarify docs/需求文档/clarify_[功能名].md
+    ↓ 输出: tests/test_[功能名]_acceptance.py
+
+所有门控通过后
+    ↓
+重新执行 /run-plan
+```
+
+**禁止行为**：
+- ❌ 跳过门控检查直接执行
+- ❌ 在测试不存在的情况下开始开发
+- ❌ 手动创建空测试文件绕过门控
+
+---
+
 ## ⚠️ 前置条件
 
 在阅读本手册之前，你应该已经：
 1. 读取了 `~/.claude/skills/执行计划_run-plan/SKILL.md`（入口文件）
 2. 理解了执行模式和核心原则
+3. **通过了门控检查**（见上文）
 
-如果没有，请先返回读取 SKILL.md。
+如果没有，请先返回读取 SKILL.md 或执行门控检查。
 
 ---
 

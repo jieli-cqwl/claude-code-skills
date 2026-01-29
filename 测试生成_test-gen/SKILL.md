@@ -14,6 +14,59 @@ description: 测试生成。在 TDD 开发、补充测试、提升覆盖率时�
 
 ---
 
+## 文档契约（铁律）
+
+> **原则**：没有输入文档 → 不能执行；没有输出文档 → 不算完成
+
+### 输入文档（门控检查）
+
+**from-clarify 模式（推荐）**：
+
+| 文档 | 路径 | 必须 | 检查命令 |
+|------|------|------|---------|
+| **AC 文档** | `docs/需求文档/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求文档/clarify_*.md` |
+| **计划文档** | `docs/开发文档/plan_[功能名].md` | ⚠️ 推荐 | `ls docs/开发文档/plan_*.md` |
+
+**门控规则**：
+```bash
+# 门控检查：AC 文档必须存在
+CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+if [ -z "$CLARIFY_DOC" ]; then
+  echo "❌ 门控失败: AC 文档不存在"
+  echo "   修复: 先执行 /clarify 生成需求文档"
+  exit 1
+fi
+echo "✅ AC 文档: $CLARIFY_DOC"
+
+# 检查计划文档（推荐）
+PLAN_DOC=$(ls docs/开发文档/plan_*.md 2>/dev/null | head -1)
+if [ -z "$PLAN_DOC" ]; then
+  echo "⚠️ 计划文档不存在，建议先执行 /plan"
+else
+  echo "✅ 计划文档: $PLAN_DOC"
+fi
+```
+
+**门控失败处理**：
+- AC 文档不存在 → **停止执行**，先执行 `/clarify`
+- 计划文档不存在 → 警告，建议先执行 `/plan`
+
+### 输出文档（强制）
+
+| 文档 | 路径 | 用途 |
+|------|------|------|
+| **测试文件** | `tests/test_[功能名]_acceptance.py` | /run-plan 门控依赖 |
+
+**输出规则**：
+- 未输出测试文件 → **不算完成**
+- 完成提示必须包含输出文件的完整路径
+- 测试必须是 FAILING 状态（TDD 起点）
+
+**下游依赖**：
+- `/run-plan` 依赖此文件（门控3）
+
+---
+
 ## 核心原则
 
 **"没有先失败的测试，就没有生产代码"**
@@ -59,8 +112,29 @@ description: 测试生成。在 TDD 开发、补充测试、提升覆盖率时�
 /test-gen property <function> # 属性：生成属性测试 (Hypothesis/fast-check)
 /test-gen verify             # 验证：检查现有测试质量
 /test-gen boundary <function> # 边界：专注边界值分析
-/test-gen ac <plan_file>     # 验收：从 /plan 验收场景生成测试框架（新增）
+/test-gen ac <plan_file>     # ⚠️ 已废弃，请使用 from-clarify
+/test-gen from-clarify <clarify_doc>  # ✅ 推荐：从 /clarify AC 表格生成测试
 ```
+
+### 🆕 推荐流程：测试先行
+
+```
+/clarify 输出 AC 表格
+    ↓
+/design 输出架构设计
+    ↓
+/plan 输出实施计划（引用 AC）
+    ↓
+/test-gen from-clarify <clarify_doc>  ← 在开发之前执行
+    ↓ 输出：FAILING 测试（开发的验收标准）
+    ↓
+/run-plan 执行开发（基于已有测试，严格 TDD）
+```
+
+**为什么测试要在开发之前？**
+- 测试是开发的验收标准，先有标准才有实现
+- 避免"先写代码后补测试"的假 TDD
+- 测试之后写的测试会被实现偏见影响
 
 ---
 
@@ -347,15 +421,49 @@ class TestValidateEmailBoundary:
         assert validate_email(email) == expected
 ```
 
-### 3.4 验收场景模式（AC 模式）
+### 3.4 从 /clarify AC 生成测试（推荐）
 
-从 /plan 的验收测试场景生成测试框架：
+> 🆕 **测试先行模式**：在 /plan 之后、/run-plan 之前执行
 
 ```bash
-/test-gen ac docs/开发文档/plan_用户认证.md
+/test-gen from-clarify docs/需求文档/clarify_用户认证.md
 ```
 
-**输入**：/plan 文档中的验收测试场景表格
+**输入**：/clarify 文档中的 AC 表格（单一来源）
+
+```markdown
+##### 正常流程
+| AC-ID | Given（前置条件） | When（操作） | Then（预期结果） | 优先级 |
+|-------|------------------|-------------|-----------------|--------|
+| AC-1 | 用户已注册，邮箱 test@example.com | 正确密码登录 | 跳转首页，显示"欢迎回来" | P0 |
+
+##### 异常流程
+| AC-ID | Given | When | Then | 优先级 |
+|-------|-------|------|------|--------|
+| AC-3 | 用户已注册 | 错误密码登录 | 显示"密码错误"，停留登录页 | P1 |
+```
+
+**特点**：
+- 直接从 /clarify 的 AC 单一来源生成，确保一致性
+- 测试名直接引用 AC-ID，便于追溯
+- 生成的是 FAILING 测试，作为开发的验收标准
+
+---
+
+### 3.5 验收场景模式（AC 模式 - ⚠️ 已废弃）
+
+> ⚠️ **此模式已废弃**：请使用 `from-clarify` 模式，直接从 AC 单一来源生成
+> **废弃原因**：/plan 的验收场景是引用 /clarify 的 AC，不是单一来源
+
+```bash
+# ⚠️ 已废弃
+/test-gen ac docs/开发文档/plan_用户认证.md
+
+# ✅ 推荐
+/test-gen from-clarify docs/需求文档/clarify_用户认证.md
+```
+
+**如果仍需使用**（仅用于兼容旧项目）：
 
 ```markdown
 | AC ID | Given | When | Then |
@@ -363,6 +471,8 @@ class TestValidateEmailBoundary:
 | AC-1 | 用户已注册，邮箱 test@example.com | 正确密码登录 | 跳转首页 |
 | AC-3 | 用户已注册 | 错误密码登录 | 显示"密码错误" |
 ```
+
+**迁移建议**：将 /plan 中的验收场景移到 /clarify 输出的 AC 表格，然后使用 `from-clarify` 模式
 
 **输出**：测试框架代码
 
@@ -554,25 +664,51 @@ tests/
 
 ## 与其他 Skills 的关系
 
+### 🆕 推荐流程（测试先行）
+
 ```
-/clarify → /design → /plan
-                        ↓
-              /run-plan (TDD 模式)
-                   ↓
-              /test-gen ← 当前
-              ┌────┴────┐
-              ↓         ↓
-         实现代码    运行测试
-              └────┬────┘
-                   ↓
-                /check
-                   ↓
-                 /qa
-                   ↓
-                /ship
+/clarify（需求澄清）
+    ↓ 输出：AC 表格（单一来源）
+/explore（方案探索）
+    ↓
+/design（架构设计）
+    ↓
+/plan（写计划）
+    ↓ 引用 AC，输出实施计划
+/test-gen from-clarify ← 当前（测试先行）
+    ↓ 从 AC 生成 FAILING 测试
+    ↓ [门控：测试必须存在才能开发]
+/run-plan（执行计划）
+    ↓ 基于已有测试，严格 TDD
+/check（开发检查）
+    ↓
+/qa（测试验收）
+    ↓ 基于 AC 验收
+/ship（代码交付）
 ```
 
-**与 `/run-plan` 配合**：
+### 为什么测试要在 /plan 之后、/run-plan 之前？
+
+1. **测试是开发的验收标准**：先有标准，才有实现
+2. **避免假 TDD**：先写代码后补测试 ≠ TDD
+3. **保证 AC 一致性**：测试直接从 AC 生成，不会偏离需求
+
+### 两种使用方式
+
+#### 方式一：测试先行（推荐）
+
+```
+/plan 完成后，/run-plan 之前：
+    ↓
+/test-gen from-clarify <clarify_doc>
+    ↓ 生成所有 AC 对应的 FAILING 测试
+    ↓
+/run-plan 执行
+    ↓ 开发者基于已有测试实现功能
+    ↓ RED → GREEN → REFACTOR
+```
+
+#### 方式二：开发中生成（兼容旧流程）
 
 ```
 /run-plan 执行时（TDD 模式）：
@@ -582,26 +718,17 @@ tests/
     2. /test-gen 生成 FAILING 测试
     3. 开发者实现函数
     4. 运行测试直到通过
-    5. 标记任务完成
 ```
 
-**触发机制**：手动触发，由开发者在实现前调用
-- `/run-plan` 的 TDD 模式会提示："请先运行 `/test-gen` 生成测试"
-- 开发者执行 `/test-gen --function xxx`
-- 测试生成后继续实现
+### 与 `/qa` 的区别
 
-**上下文传递**：
-- `/run-plan` 传递当前任务的目标函数名
-- `/test-gen` 自动定位函数位置
-- 生成的测试放在 `tests/` 对应目录
-
-**与 `/qa` 的区别**：
 | 维度 | `/test-gen` | `/qa` |
 |------|-------------|-------|
 | 时机 | 实现前 | 实现后 |
 | 目的 | 生成测试 | 运行测试 + 验收 |
 | 测试状态 | FAILING | PASSING |
-| 角色 | 开发者 | 测试员 |
+| 角色 | 测试工程师（前置） | 测试员（验收） |
+| AC 使用 | 从 AC 生成测试 | 基于 AC 验收 |
 
 ---
 
@@ -621,6 +748,25 @@ tests/
 
 ---
 
+## ⛔ 边界约束（铁律）
+
+> **`/test-gen` 的职责边界：只做测试生成，不能跳过测试**
+
+| 禁止行为 | 说明 |
+|---------|------|
+| ❌ 跳过测试生成直接进入 `/run-plan` | 测试先行是铁律 |
+| ❌ 生成测试后直接写实现代码 | 实现代码是 `/run-plan` 的职责 |
+
+**正确的完成动作**：
+1. 输出测试文件到 `tests/test_[功能名]_acceptance.py`
+2. 展示完成提示
+3. 进入下一环节 `/run-plan`（正常流转）或等待用户指令
+
+**跳过环节的处理**：
+- 测试生成不能跳过（铁律：测试先行）
+
+---
+
 ## ⛔ 铁律约束
 
 | 约束 | 要求 |
@@ -636,35 +782,61 @@ tests/
 
 ---
 
+## 🔴 TDD 铁律
+
+> 详细规范见：`~/.claude/reference/TDD规范.md`
+
+### 核心原则
+
+```
+没有先失败的测试，就没有生产代码
+```
+
+**测试之前就写了代码？删掉它。重新开始。**
+
+### Red-Green-Refactor 循环
+
+```
+🔴 RED（写失败测试）→ 🟢 GREEN（最小实现）→ 🔄 REFACTOR（清理）→ 重复
+```
+
+### 快速检查清单
+
+- [ ] 看到测试失败了吗？（RED）
+- [ ] 写的是最小实现吗？（GREEN）
+- [ ] 所有测试仍然通过吗？（REFACTOR）
+
+### 危险信号
+
+- 测试之前写代码 → **删除代码，重新开始**
+- 测试立即通过 → 修复测试
+- 无法解释失败原因 → 重新理解需求
+
+**完整的 TDD 流程、常见借口、测试反模式，请阅读**：`~/.claude/reference/TDD规范.md`
+
+---
+
 ## ✅ 完成提示
 
 ```
 ✅ 测试生成完成
 
+📁 输出文件：tests/test_[功能名]_acceptance.py
+📎 前置文档：
+   - AC 文档：docs/需求文档/clarify_[功能名].md
+   - 计划文档：docs/开发文档/plan_[功能名].md
+
 🧪 生成统计:
    - 测试文件: X 个
-   - 测试用例: X 个
+   - 测试用例: X 个（全部 FAILING）
    - 预期覆盖: XX%（需 coverage 验证）
 
-📁 输出:
-   - tests/test_xxx.py（追加/新建）
-   - tests/test_xxx_property.py（如适用）
+🔴 测试状态：FAILING（符合 TDD 预期）
+   - 这些测试是开发的验收标准
+   - /run-plan 将基于这些测试进行 TDD 开发
 
-🎯 下一步:
-   1. 实现被测函数
-   2. 运行 pytest 确保测试通过
-   3. 运行 coverage run -m pytest && coverage report 验证覆盖率
-   4. 运行 /test-gen verify 检查质量
-   5. 继续 /check → /qa → /ship
+🎯 下一步：
+   1. 执行 /run-plan（基于已有测试，严格 TDD）
+   2. 开发完成后执行 /check
+   3. 检查通过后执行 /qa
 ```
-
----
-
-**版本**：v1.2
-**创建日期**：2026-01-28
-**更新日期**：2026-01-28
-**参考**：[调研报告](docs/设计文档/调研_test-gen.md)
-
-**更新日志**：
-- v1.2: 新增 AC 模式（从 /plan 验收场景生成测试框架）
-- v1.1: 新增 Phase 0 目标识别、增量模式、依赖检测、测试命名规范、文件策略、Mock 策略与铁律对齐、/run-plan 集成说明
