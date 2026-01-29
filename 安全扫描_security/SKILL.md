@@ -2,6 +2,7 @@
 name: security
 command: security
 user_invocable: true
+parallel_mode: true
 description: 安全漏洞扫描。在代码发布前、PR 合并前、安全审计时使用。使用专业工具（Bandit/Semgrep/Gitleaks）系统检查 OWASP Top 10 漏洞，每个漏洞提供可执行修复代码。
 ---
 
@@ -22,7 +23,16 @@ description: 安全漏洞扫描。在代码发布前、PR 合并前、安全审�
 
 ---
 
-## 何时使用
+## 触发条件
+
+当用户使用以下任一方式时，立即激活此 skill：
+- 说"**安全检查**"或"**安全扫描**"（主触发词）
+- 使用命令：`/security`
+- 说"有漏洞吗"、"安全吗"
+- 说"检查安全问题"
+- 说"有没有注入风险"
+
+**何时使用**：
 
 | 场景 | 使用 |
 |------|------|
@@ -101,6 +111,149 @@ Phase 5: (可选) 自动修复
     - 高置信度问题自动修复
     - 需用户确认
 ```
+
+---
+
+## 并行架构
+
+> **设计目标**：通过 8 Agent 并行扫描 + 8 Agent 并行修复建议，大幅提升安全扫描效率。
+
+### Phase 1: 并行扫描（8 Agent，subagent_type=Bash）
+
+同时启动以下 8 个扫描任务，每个 Agent 负责特定的安全检测领域：
+
+| Agent | 扫描任务 | 工具/方法 | 检测目标 |
+|-------|---------|----------|---------|
+| Agent 1 | Bandit 扫描 | `bandit -r . -f json` | Python 安全漏洞 |
+| Agent 2 | Semgrep 扫描 | `semgrep scan --config=auto` | 多语言 SAST |
+| Agent 3 | Gitleaks 扫描 | `gitleaks detect` | 密钥泄露 |
+| Agent 4 | 依赖漏洞扫描 | `pip-audit` / `npm audit` | 已知 CVE |
+| Agent 5 | SQL 注入检测 | Grep + AST 分析 | CWE-89 |
+| Agent 6 | XSS 检测 | Grep + 模板分析 | CWE-79 |
+| Agent 7 | 认证授权审查 | 代码模式匹配 | CWE-287/CWE-862 |
+| Agent 8 | 敏感数据暴露检测 | 正则 + 上下文分析 | CWE-200/CWE-312 |
+
+**Agent 指令模板**：
+
+```markdown
+你是安全扫描 Agent，负责 [具体任务]。
+
+**任务**：
+1. 执行 [工具/方法]
+2. 解析扫描结果
+3. 输出标准化格式
+
+**输出格式**：
+```json
+{
+  "agent_id": "[1-8]",
+  "task": "[任务名]",
+  "findings": [
+    {
+      "severity": "critical|high|medium|low",
+      "cwe": "CWE-XXX",
+      "location": "file:line",
+      "description": "漏洞描述",
+      "evidence": "问题代码片段"
+    }
+  ],
+  "error": null
+}
+```
+
+**超时**：120 秒
+```
+
+**等待所有 Agent 完成后继续。**
+
+### Phase 2: 并行修复建议（8 Agent，subagent_type=general-purpose）
+
+各 Agent 为 Phase 1 发现的漏洞生成修复代码，按漏洞类型分配：
+
+| Agent | 修复领域 | 负责的漏洞类型 |
+|-------|---------|---------------|
+| Agent 1 | 注入漏洞修复 | SQL 注入、命令注入、LDAP 注入 |
+| Agent 2 | XSS/输出编码修复 | XSS、模板注入、HTML 注入 |
+| Agent 3 | 认证授权修复 | 弱认证、越权访问、会话管理 |
+| Agent 4 | 密钥处理修复 | 硬编码密钥、密钥泄露、弱加密 |
+| Agent 5 | 依赖升级建议 | 已知 CVE、过期依赖 |
+| Agent 6 | 配置安全修复 | 不安全配置、调试模式、默认凭证 |
+| Agent 7 | 数据保护修复 | 敏感数据暴露、日志泄露、明文存储 |
+| Agent 8 | 其他漏洞修复 | SSRF、反序列化、业务逻辑 |
+
+**Agent 指令模板**：
+
+```markdown
+你是安全修复 Agent，负责为 [漏洞类型] 生成修复代码。
+
+**输入**：Phase 1 扫描结果中属于你负责的漏洞
+
+**要求**：
+1. 每个漏洞提供可直接使用的修复代码
+2. 包含 Before/After 对比
+3. 说明修复原理
+4. 标注修复置信度（高/中/低）
+
+**输出格式**：
+```json
+{
+  "agent_id": "[1-8]",
+  "fixes": [
+    {
+      "vulnerability_ref": "Phase1-AgentX-FindingY",
+      "location": "file:line",
+      "confidence": "high|medium|low",
+      "fix_code": {
+        "before": "原始代码",
+        "after": "修复后代码"
+      },
+      "explanation": "修复原理说明"
+    }
+  ]
+}
+```
+```
+
+**等待所有 Agent 完成后继续。**
+
+### Phase 3: 汇总报告（串行）
+
+主 Agent 汇总所有并行 Agent 的结果：
+
+1. **合并扫描结果**
+   - 去重：相同位置的相同漏洞只保留一条
+   - 关联：将漏洞与修复建议关联
+
+2. **按 OWASP Top 10 分类**
+   - A01-A10 分类整理
+   - 统计各类别漏洞数量
+
+3. **生成报告**
+   - 安全评分计算
+   - 严重程度分级汇总
+   - 修复优先级排序
+   - 输出完整报告到 `docs/安全扫描/`
+
+4. **输出终端摘要**
+
+### 并行错误处理
+
+**单个 Agent 失败**：
+- 记录失败原因
+- 其他 Agent 继续执行
+- 报告中标注"[部分扫描]"及失败的 Agent
+
+**超时处理**：
+- 单个 Agent 超时（120 秒）：标记超时，继续汇总已完成结果
+- 报告中标注超时的扫描任务
+
+**工具不可用**：
+- Agent 检测到工具缺失时，输出 `{"error": "tool_not_found", "tool": "xxx"}`
+- 主 Agent 汇总时提示用户安装缺失工具
+
+**结果冲突**：
+- 多个 Agent 对同一位置报告不同严重程度：取最高严重程度
+- 相同漏洞不同描述：合并去重，保留最详细的描述
 
 ---
 

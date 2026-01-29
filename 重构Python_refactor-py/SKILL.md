@@ -14,6 +14,22 @@ description: Python 代码重构。处理 Python/FastAPI 项目的过度设计�
 
 ---
 
+## 触发条件
+
+当用户使用以下任一方式时，立即激活此 skill：
+- 说"**重构 Python**"或"**Python 重构**"（主触发词）
+- 使用命令：`/refactor-py`
+- 说"Python 代码太乱了"
+- 说"FastAPI 项目需要整理"
+- 说"ABC 太多了"、"装饰器太多了"
+
+**适用场景**：
+- Python/FastAPI 项目的过度设计
+- ABC 滥用、装饰器嵌套
+- 过度类型化
+
+---
+
 ## 依赖规范
 
 本 Skill 依赖以下规范文件：

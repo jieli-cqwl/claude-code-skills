@@ -7,7 +7,7 @@ set -e
 
 # ===== 配置 =====
 PRD_FILE=""
-MAX_ITERATIONS=30
+MAX_ITERATIONS=100
 LOG_FILE=".claude/auto-dev.log"
 DETAIL_FILE=".claude/auto-dev-detail.md"
 COMPLETION_MARKER="COMPLETE"
@@ -41,7 +41,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "选项:"
             echo "  --prd <文件>           需求文档路径（必需）"
-            echo "  --max-iterations <N>   最大迭代次数（默认: 30）"
+            echo "  --max-iterations <N>   最大迭代次数（默认: 100，适合大需求过夜运行）"
             echo "  --log <文件>           日志文件路径（默认: .claude/auto-dev.log）"
             echo "  --help                 显示帮助"
             exit 0

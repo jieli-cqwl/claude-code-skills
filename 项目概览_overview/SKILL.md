@@ -2,6 +2,7 @@
 name: overview
 command: overview
 user_invocable: true
+parallel_mode: true
 description: 项目概览。接手新项目时快速理解全貌，用产品视角解释项目用途，用架构图展示模块关系，指出新手应该先看的文件。
 ---
 
@@ -24,7 +25,16 @@ description: 项目概览。接手新项目时快速理解全貌，用产品视�
 
 ---
 
-## 何时使用
+## 触发条件
+
+当用户使用以下任一方式时，立即激活此 skill：
+- 说"**项目概览**"或"**了解项目**"（主触发词）
+- 使用命令：`/overview`
+- 说"这项目是干嘛的"
+- 说"带我了解一下这个项目"
+- 说"接手新项目"
+
+**何时使用**：
 
 | 场景 | 使用 |
 |------|------|
@@ -43,6 +53,136 @@ description: 项目概览。接手新项目时快速理解全貌，用产品视�
 第二步：生成概览文档
     ↓
 第三步：确认理解是否准确
+```
+
+---
+
+## 并行架构
+
+> **性能优化**：通过 8 Agent 并行信息收集，大幅提升项目扫描效率
+
+### Phase 1: 并行信息收集（8 Agent，subagent_type=Explore）
+
+同时启动以下 8 个信息收集任务：
+
+| Agent | 任务 | 收集内容 | 返回格式 |
+|-------|------|---------|---------|
+| Agent 1 | 目录结构分析 | 项目目录树、核心目录识别 | `{directories: [], core_modules: []}` |
+| Agent 2 | 技术栈识别 | 框架、语言、构建工具、版本 | `{framework: "", language: "", build_tool: "", versions: {}}` |
+| Agent 3 | 依赖关系分析 | 外部依赖、内部模块依赖 | `{external_deps: [], internal_deps: []}` |
+| Agent 4 | 核心模块识别 | 业务模块、职责、关键文件 | `{modules: [{name, responsibility, key_files}]}` |
+| Agent 5 | API 端点收集 | 路由、接口、HTTP 方法 | `{endpoints: [{path, method, description}]}` |
+| Agent 6 | 数据模型分析 | 实体、表结构、关系 | `{models: [{name, fields, relations}]}` |
+| Agent 7 | 配置文件分析 | 环境配置、关键配置项 | `{configs: [{file, key_settings}]}` |
+| Agent 8 | 文档收集 | README、现有文档、注释 | `{docs: [{file, summary}], readme_summary: ""}` |
+
+**Agent 启动指令**：
+
+```yaml
+parallel_tasks:
+  - name: "目录结构分析"
+    subagent_type: Explore
+    task: |
+      分析项目目录结构，识别核心目录和模块边界。
+      返回 JSON: {directories: [...], core_modules: [...]}
+
+  - name: "技术栈识别"
+    subagent_type: Explore
+    task: |
+      识别项目使用的技术栈（框架、语言、构建工具）及版本。
+      检查: package.json, pom.xml, pyproject.toml, go.mod 等
+      返回 JSON: {framework, language, build_tool, versions}
+
+  - name: "依赖关系分析"
+    subagent_type: Explore
+    task: |
+      分析项目的外部依赖和内部模块依赖关系。
+      返回 JSON: {external_deps: [...], internal_deps: [...]}
+
+  - name: "核心模块识别"
+    subagent_type: Explore
+    task: |
+      识别项目的核心业务模块、职责和关键文件。
+      返回 JSON: {modules: [{name, responsibility, key_files}]}
+
+  - name: "API 端点收集"
+    subagent_type: Explore
+    task: |
+      收集项目暴露的 API 端点信息。
+      返回 JSON: {endpoints: [{path, method, description}]}
+
+  - name: "数据模型分析"
+    subagent_type: Explore
+    task: |
+      分析项目的数据模型、表结构和关系。
+      返回 JSON: {models: [{name, fields, relations}]}
+
+  - name: "配置文件分析"
+    subagent_type: Explore
+    task: |
+      分析项目的配置文件和关键配置项。
+      返回 JSON: {configs: [{file, key_settings}]}
+
+  - name: "文档收集"
+    subagent_type: Explore
+    task: |
+      收集项目现有文档、README 和关键注释。
+      返回 JSON: {docs: [{file, summary}], readme_summary: ""}
+```
+
+**等待所有 Agent 完成后继续。**
+
+### Phase 2: 汇总输出（串行）
+
+主 Agent 整合所有并行收集的信息，生成项目概览文档：
+
+**整合步骤**：
+
+1. **合并结果**：将 8 个 Agent 的 JSON 结果合并
+2. **交叉验证**：检查不同 Agent 结果的一致性
+3. **填充模板**：将信息填入概览文档模板
+4. **生成架构图**：根据模块关系生成 Mermaid 图
+5. **输出文档**：生成 `docs/项目概览.md`
+
+**输出内容**：
+- 项目用途（产品视角）- 来自 Agent 8 的文档收集 + Agent 4 的模块识别
+- 架构图（模块关系）- 来自 Agent 1, 3, 4 的结构和依赖分析
+- 新手应先看的文件 - 来自 Agent 4, 5, 7 的关键文件识别
+
+### 错误处理
+
+**单个 Agent 失败**：
+
+```yaml
+error_handling:
+  strategy: partial_success
+  rules:
+    - if_failed: "Agent 1-4"  # 核心信息
+      action: retry_once
+      fallback: abort_with_message
+    - if_failed: "Agent 5-8"  # 辅助信息
+      action: continue_without
+      note: "在输出中标注缺失部分"
+```
+
+| 失败场景 | 处理方式 |
+|---------|---------|
+| Agent 1-4 失败（核心信息） | 重试一次，仍失败则终止并报告 |
+| Agent 5-8 失败（辅助信息） | 继续执行，在输出中标注缺失 |
+| 超过 3 个 Agent 失败 | 终止并建议用户检查项目结构 |
+| 超时（单个 Agent > 60s） | 终止该 Agent，使用已有结果 |
+
+**错误报告格式**：
+
+```markdown
+⚠️ 部分信息收集失败：
+- [失败的 Agent]: [失败原因]
+
+已完成的分析：
+- [成功收集的信息列表]
+
+建议：
+- [根据失败原因给出的建议]
 ```
 
 ---

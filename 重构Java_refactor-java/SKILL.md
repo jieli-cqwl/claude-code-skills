@@ -14,6 +14,22 @@ description: Java 代码重构。处理 Java/Spring 项目的过度设计：God 
 
 ---
 
+## 触发条件
+
+当用户使用以下任一方式时，立即激活此 skill：
+- 说"**重构 Java**"或"**Java 重构**"（主触发词）
+- 使用命令：`/refactor-java`
+- 说"Java 代码太乱了"
+- 说"Spring 项目需要整理"
+- 说"接口太多了"
+
+**适用场景**：
+- Java/Spring 项目的过度设计
+- God Class、接口泛滥
+- 设计模式滥用
+
+---
+
 ## 依赖规范
 
 本 Skill 依赖以下规范文件：
