@@ -110,9 +110,23 @@ echo "✅ 所有门控检查通过，可以继续执行"
 
 ### 1.1 找到计划文件
 
+**支持两种方式**：
+
 ```bash
-# 扫描计划文档（优先开发文档目录，兼容根目录旧文件）
+# 方式1: 用户指定文件路径（推荐，/clear 后使用）
+# 如果用户执行 /run-plan docs/开发文档/plan_用户认证.md
+# 则直接使用该路径
+
+# 方式2: 自动扫描（默认）
 ls docs/开发文档/plan_*.md docs/plan_*.md 2>/dev/null | head -1
+```
+
+**判断逻辑**：
+```python
+if user_provided_path:
+    plan_file = user_provided_path  # 优先使用用户指定的路径
+else:
+    plan_file = auto_scan()  # 自动扫描
 ```
 
 ### 1.2 解析 Tasks 表格

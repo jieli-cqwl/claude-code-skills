@@ -625,4 +625,8 @@ docs/开发文档/plan_[功能名].md
    1. 自动执行 /critique 评审计划
    2. 评审通过后执行 /test-gen from-clarify（测试先行）
    3. 测试生成后执行 /run-plan（执行计划）
+
+📋 /clear 后可直接执行（复制粘贴）：
+   /test-gen from-clarify docs/需求文档/clarify_[功能名].md
+   /run-plan docs/开发文档/plan_[功能名].md
 ```

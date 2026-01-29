@@ -839,4 +839,7 @@ tests/
    1. 执行 /run-plan（基于已有测试，严格 TDD）
    2. 开发完成后执行 /check
    3. 检查通过后执行 /qa
+
+📋 /clear 后可直接执行（复制粘贴）：
+   /run-plan docs/开发文档/plan_[功能名].md
 ```
