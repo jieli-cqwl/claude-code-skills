@@ -392,47 +392,64 @@ Repository 层（数据访问）
 
 ## 并行架构
 
-> **优化策略**：通过 9 Agent 并行设计，按架构层次划分职责，大幅提升设计效率。
+> **优化策略**：通过分层并行设计，解决 Agent 间的隐式依赖，确保设计一致性。
+> **核心原则**：有依赖的任务串行，无依赖的任务并行。
 
-### Parallel Phase 1: 并行设计（9 Agent，subagent_type=general-purpose）
+### Parallel Phase 1a: 数据模型设计（串行，1 Agent）
 
-同时启动以下 9 个设计任务，按架构层次划分：
-
-#### 数据层（3 Agent）
+**为什么串行**：数据模型是其他设计的基础，API 设计和业务逻辑都依赖数据模型。
 
 | Agent | 任务 | 输出 |
 |-------|------|------|
 | Agent 1 | **数据模型设计** | 实体定义、字段类型、关联关系、ER 图 |
-| Agent 2 | **数据访问层设计** | Repository 接口、DAO 模式、查询方法 |
-| Agent 3 | **数据迁移设计** | Schema 变更脚本、迁移策略、回滚方案 |
 
-#### 业务层（3 Agent）
+**⚠️ Phase 1a 专属超时和恢复机制**：
 
-| Agent | 任务 | 输出 |
-|-------|------|------|
-| Agent 4 | **核心业务逻辑设计** | Service 接口、业务流程、依赖关系 |
-| Agent 5 | **业务规则设计** | Validator、Policy、约束条件 |
-| Agent 6 | **状态管理设计** | 状态机定义、状态转换、事件触发 |
+> **配置来源**：`docs/需求文档/clarify_skills并行优化.md` 第 7.3 节超时配置表
 
-#### 接口层（3 Agent）
+- **超时时间**：90 秒（见 AC 文档，高于普通 Agent 的 60 秒，因为数据模型设计更复杂）
+- **超时处理**：
+  1. 如果 90 秒内未完成，立即通知用户
+  2. 提供选项：
+     - ① 继续等待（最多再等 90 秒）
+     - ② 用户提供简化数据模型（推荐，如已有 ER 图或表结构）
+     - ③ 停止执行，报告失败
+- **失败恢复**：
+  1. 如果 Agent 1 失败，询问用户是否提供已有的数据模型（如 ER 图、表结构）
+  2. 如果用户无法提供，停止执行并报告失败，等待用户决策
 
-| Agent | 任务 | 输出 |
-|-------|------|------|
-| Agent 7 | **API 接口设计** | REST/GraphQL 端点、请求/响应格式 |
-| Agent 8 | **错误处理设计** | 异常类型、错误码、响应格式 |
-| Agent 9 | **安全机制设计** | 认证方式、授权策略、数据保护 |
+**Agent 1 返回后，将数据模型传递给 Phase 1b 的所有 Agent。**
+
+---
+
+### Parallel Phase 1b: 并行设计（6 Agent，subagent_type=general-purpose）
+
+基于 Phase 1a 的数据模型，同时启动 6 个设计任务：
+
+| Agent | 任务 | 输入依赖 | 输出 |
+|-------|------|---------|------|
+| Agent 2 | **数据访问层设计** | 数据模型（Phase 1a） | Repository 接口、DAO 模式、查询方法 |
+| Agent 3 | **业务逻辑设计** | 数据模型（Phase 1a） | Service 接口、业务流程、状态机、验证规则 |
+| Agent 4 | **API 接口设计** | 数据模型（Phase 1a） | REST 端点、请求/响应格式、DTO 定义 |
+| Agent 5 | **错误处理设计** | 数据模型（Phase 1a） | 异常类型、错误码、响应格式 |
+| Agent 6 | **安全机制设计** | 数据模型（Phase 1a） | 认证方式、授权策略、数据保护 |
+| Agent 7 | **数据迁移设计** | 数据模型（Phase 1a） | Schema 变更脚本、迁移策略、回滚方案 |
+
+**注意**：原业务层 3 个 Agent（核心逻辑、业务规则、状态管理）合并为 1 个 Agent 3（业务逻辑设计），因为这三者高度相关，拆分会导致重复和不一致。
 
 **每个 Agent 返回结构化 JSON**：
 
 ```json
 {
   "layer": "数据层|业务层|接口层",
-  "agent_id": 1-9,
+  "agent_id": 2-7,
   "task": "任务名称",
+  "input_dependency": "依赖的 Phase 1a 输出（如有）",
   "design": {
     "summary": "设计概述",
     "details": { ... },
-    "dependencies": ["依赖的其他设计"],
+    "interfaces": ["对外暴露的接口"],
+    "dependencies": ["依赖的其他模块"],
     "constraints": ["约束条件"]
   },
   "status": "completed|failed",
@@ -440,11 +457,22 @@ Repository 层（数据访问）
 }
 ```
 
-**等待所有 9 个 Agent 完成后继续。**
+**等待所有 6 个 Agent 完成后继续。**
 
 ---
 
 ### Parallel Phase 2: 一致性校验（串行）
+
+> **用户进度提示**：在执行每个 Phase 前输出进度信息
+
+```markdown
+📊 /design 执行进度
+
+⏳ Phase 1a: 数据模型设计... ✅ 完成
+⏳ Phase 1b: 并行设计（数据层 + 业务层 + 接口层）... ✅ 完成（5/6 任务成功）
+⏳ Phase 2: 一致性校验... ⏳ 执行中
+⏳ Phase 3: 整合输出设计文档
+```
 
 > **关键环节**：确保各层设计间的接口匹配和契约一致
 
@@ -454,10 +482,10 @@ Repository 层（数据访问）
 
 | 校验类型 | 检查内容 | 冲突示例 |
 |---------|---------|---------|
-| **数据层 ↔ 业务层** | Repository 接口与 Service 调用匹配 | Service 调用了不存在的 Repository 方法 |
-| **业务层 ↔ 接口层** | Service 返回类型与 API 响应格式一致 | Service 返回 Entity，API 需要 DTO |
-| **数据模型 ↔ API 参数** | 字段名称和类型对应 | 数据库用 snake_case，API 用 camelCase 未转换 |
-| **状态机 ↔ 业务规则** | 状态转换与验证规则一致 | 状态机允许的转换被业务规则拒绝 |
+| **数据模型 ↔ 数据访问层** | Repository 方法与实体字段匹配 | Repository 查询了不存在的字段 |
+| **数据模型 ↔ API 接口** | DTO 字段与实体字段对应 | 数据库用 snake_case，API 用 camelCase 未转换 |
+| **数据访问层 ↔ 业务逻辑** | Repository 接口与 Service 调用匹配 | Service 调用了不存在的 Repository 方法 |
+| **业务逻辑 ↔ API 接口** | Service 返回类型与 API 响应格式一致 | Service 返回 Entity，API 需要 DTO |
 | **错误处理 ↔ 业务逻辑** | 异常类型与错误码映射完整 | 业务抛出的异常没有对应错误码 |
 | **安全机制 ↔ API 接口** | 认证/授权要求与接口标注一致 | 接口标注无需认证但业务层检查权限 |
 
@@ -493,7 +521,7 @@ Repository 层（数据访问）
 
 主 Agent 整合所有 Agent 的设计输出，生成完整的架构设计文档：
 
-1. **汇总各层设计**：合并 9 个 Agent 的输出
+1. **汇总各层设计**：合并 7 个 Agent 的输出（Phase 1a: 1 + Phase 1b: 6）
 2. **应用一致性修正**：根据 Phase 2 的校验结果调整
 3. **生成统一文档**：按标准模板输出到 `docs/设计文档/设计_[功能名].md`
 
@@ -505,23 +533,28 @@ Repository 层（数据访问）
 
 | 场景 | 处理方式 |
 |------|---------|
-| 单个 Agent 超时 | 标记该 Agent 为失败，继续等待其他 Agent |
-| 单个 Agent 返回错误 | 记录错误信息，在汇总时标注缺失部分 |
-| 多个 Agent 失败（≥3） | 终止并行设计，回退到串行模式 |
-| 全部 Agent 失败 | 报告错误，请求用户介入 |
+| Phase 1a Agent 失败 | **阻塞**：数据模型是基础，必须成功才能继续 |
+| Phase 1b 单个 Agent 超时 | 标记该 Agent 为失败，继续等待其他 Agent |
+| Phase 1b 单个 Agent 返回错误 | 记录错误信息，在汇总时标注缺失部分 |
+| Phase 1b 多个 Agent 失败（≥3） | 停止执行，报告失败原因，等待用户决策 |
+| Phase 1b 全部 Agent 失败 | 报告错误，请求用户介入 |
 
-#### 回退机制
+#### 失败通知机制
 
 ```markdown
-⚠️ 并行设计降级通知
+⚠️ 并行设计失败通知
 
-检测到 X 个 Agent 失败，自动切换到串行设计模式。
+Phase 1a 状态: ✅ 数据模型设计完成
+Phase 1b 状态: 检测到 X 个 Agent 失败（≥3），已停止执行。
 
 **失败的 Agent**：
 - Agent N: [失败原因]
 - ...
 
-**切换策略**：按原有 Phase 1-5 串行执行设计流程。
+**请选择处理方式**：
+1. 重试失败的 Agent（推荐）
+2. 基于已完成的 Agent 输出继续（部分设计）
+3. 终止本次设计
 ```
 
 #### 错误报告格式
@@ -529,16 +562,18 @@ Repository 层（数据访问）
 ```json
 {
   "parallel_execution": {
-    "total_agents": 9,
-    "completed": 7,
-    "failed": 2,
-    "failed_agents": [
-      {"agent_id": 3, "task": "数据迁移设计", "error": "超时"},
-      {"agent_id": 6, "task": "状态管理设计", "error": "依赖信息不足"}
-    ]
+    "phase_1a": {"status": "completed", "agent": 1},
+    "phase_1b": {
+      "total_agents": 6,
+      "completed": 5,
+      "failed": 1,
+      "failed_agents": [
+        {"agent_id": 7, "task": "数据迁移设计", "error": "超时"}
+      ]
+    }
   },
-  "fallback_mode": "串行设计",
-  "missing_sections": ["数据迁移", "状态管理"]
+  "fallback_mode": "无（失败数 < 3）",
+  "missing_sections": ["数据迁移"]
 }
 ```
 

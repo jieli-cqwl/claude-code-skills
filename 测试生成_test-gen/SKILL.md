@@ -17,32 +17,92 @@ description: 测试生成。在 TDD 开发、补充测试、提升覆盖率时�
 
 ## 并行架构
 
-> **并行模式**：通过 20 个 Agent 并行执行代码分析和测试生成，大幅提升效率
+> **并行模式**：按代码范围（函数/文件）拆分任务，每个 Agent 负责独立的代码单元
+> **核心原则**：工作范围互斥，避免多个 Agent 分析同一段代码
 
-### Phase 1: 并行代码分析（10 Agent，subagent_type=Explore）
+### Phase 0: 代码范围识别（串行，快速）
 
-同时启动以下 10 个分析任务：
+主 Agent 快速扫描目标代码，识别需要测试的函数/类：
 
-| Agent | 分析任务 | 输出内容 |
-|-------|---------|---------|
-| Agent 1 | 函数签名分析 | 参数类型、返回类型、可选参数、默认值 |
-| Agent 2 | 边界值识别 | 数值边界、字符串长度、集合大小、时间边界 |
-| Agent 3 | 异常路径分析 | 可能抛出的异常、错误码、失败条件 |
-| Agent 4 | 依赖关系分析 | 外部依赖、内部依赖、可 Mock 依赖 |
-| Agent 5 | 状态变化分析 | 副作用、状态修改、数据变更 |
-| Agent 6 | 输入组合分析 | 参数组合、互斥条件、联合约束 |
-| Agent 7 | 并发场景分析 | 线程安全、竞态条件、死锁风险 |
-| Agent 8 | 性能边界分析 | 大数据量、超时场景、资源限制 |
-| Agent 9 | 安全输入分析 | 注入风险、越权场景、敏感数据 |
-| Agent 10 | 业务规则分析 | 业务约束、领域规则、合规要求 |
+```bash
+# 识别目标代码中的函数和类
+grep -E "^(def |async def |class )" <target_file> | head -20
+```
+
+**输出**：待测试的函数/类列表（按风险等级排序）
+
+```json
+{
+  "target_units": [
+    {"name": "validate_email", "file": "validators.py", "line": 15, "risk": "medium"},
+    {"name": "process_payment", "file": "payment.py", "line": 42, "risk": "critical"},
+    {"name": "UserService", "file": "user_service.py", "line": 1, "risk": "high"}
+  ],
+  "total_count": 10
+}
+```
+
+**⚠️ Agent 数量限制**：
+- **最小 Agent 数**：2（至少需要拆分任务）
+- **最大 Agent 数**：10（超过此数量收益递减，管理开销增加）
+- **推荐 Agent 数**：每个 Agent 负责 1-3 个函数/类
+
+**代码单元数量与 Agent 分配规则**：
+
+| 代码单元数量 | Agent 数量 | 分配策略 |
+|-------------|-----------|---------|
+| 1-2 | 2 | 最小 Agent 数，每个 Agent 1 个代码单元 |
+| 3-10 | N（=代码单元数） | 每个 Agent 1 个代码单元 |
+| 11-20 | 10 | 每个 Agent 1-2 个代码单元（按风险等级分组） |
+| 21-30 | 10 | 每个 Agent 2-3 个代码单元（按模块相关性分组） |
+| >30 | 10 | 按模块分组，每组作为一个 Agent 任务 |
+
+**11-30 代码单元的分组原则**：
+1. **优先按模块相关性**：同一文件或同一业务模块的代码单元分到同一 Agent
+2. **次优按风险等级**：相同风险等级的代码单元分到同一 Agent
+3. **平衡原则**：确保每个 Agent 的工作量大致相等
+
+---
+
+### Phase 1: 并行代码分析（N Agent，按函数/文件拆分）
+
+**拆分策略**：每个 Agent 负责 1-3 个函数/类（按代码范围拆分，非按维度拆分）
+
+| Agent | 负责范围（示例） | 分析内容（全维度） |
+|-------|-----------------|-------------------|
+| Agent 1 | `validate_email()` | 签名、边界值、异常、依赖、状态、安全 |
+| Agent 2 | `validate_phone()` | 签名、边界值、异常、依赖、状态、安全 |
+| Agent 3 | `process_payment()` | 签名、边界值、异常、依赖、状态、安全 |
+| Agent 4 | `UserService` 类 | 签名、边界值、异常、依赖、状态、安全 |
+| ... | ... | ... |
+
+**每个 Agent 对其负责的代码单元进行全维度分析**：
+- 函数签名（参数类型、返回类型）
+- 边界值（数值、字符串、集合边界）
+- 异常路径（可能的异常、错误码）
+- 依赖关系（外部/内部依赖）
+- 状态变化（副作用、数据变更）
+- 安全输入（注入风险、越权场景）
 
 **每个 Agent 返回结构化 JSON**：
 ```json
 {
   "agent_id": "agent_1",
-  "task": "函数签名分析",
-  "findings": [...],
-  "test_scenarios": [...],
+  "code_unit": "validate_email",
+  "file": "validators.py",
+  "analysis": {
+    "signature": {"params": [...], "return_type": "bool"},
+    "boundaries": ["空字符串", "@符号缺失", "超长邮箱"],
+    "exceptions": ["ValueError"],
+    "dependencies": [],
+    "state_changes": [],
+    "security_risks": ["无输入校验"]
+  },
+  "test_scenarios": [
+    {"name": "valid_email", "type": "happy_path", "priority": "P0"},
+    {"name": "empty_string", "type": "boundary", "priority": "P0"},
+    {"name": "no_at_symbol", "type": "boundary", "priority": "P1"}
+  ],
   "risk_level": "medium"
 }
 ```
@@ -51,26 +111,27 @@ description: 测试生成。在 TDD 开发、补充测试、提升覆盖率时�
 
 ---
 
-### Phase 2: 并行测试生成（10 Agent，subagent_type=general-purpose）
+### Phase 2: 并行测试生成（N Agent，按函数/文件拆分）
 
-基于 Phase 1 的分析结果，同时启动以下 10 个测试生成任务：
+**拆分策略**：与 Phase 1 相同，每个 Agent 为其负责的代码单元生成完整测试
 
-| Agent | 测试类型 | 职责 |
-|-------|---------|------|
-| Agent 1 | 正常路径测试 | Happy path、主流程、典型用例 |
-| Agent 2 | 边界值测试 | 边界条件、临界值、极限场景 |
-| Agent 3 | 异常处理测试 | 异常捕获、错误恢复、失败处理 |
-| Agent 4 | 服务契约测试 | API 契约、服务集成（**禁止 Mock**） |
-| Agent 5 | 参数化测试 | 多组输入、数据驱动、组合覆盖 |
-| Agent 6 | 属性测试 | Hypothesis/fast-check、不变量验证 |
-| Agent 7 | 集成测试 | 模块集成、端到端流程 |
-| Agent 8 | 性能测试 | 响应时间、吞吐量、资源消耗 |
-| Agent 9 | 安全测试 | 注入防护、权限校验、数据脱敏 |
-| Agent 10 | 回归测试 | 历史 Bug、已知问题、边缘案例 |
+| Agent | 负责范围 | 生成内容（全类型测试） |
+|-------|---------|----------------------|
+| Agent 1 | `validate_email()` | 正常路径 + 边界值 + 异常处理 + 属性测试 |
+| Agent 2 | `validate_phone()` | 正常路径 + 边界值 + 异常处理 + 属性测试 |
+| Agent 3 | `process_payment()` | 正常路径 + 边界值 + 异常处理 + 契约测试（禁 Mock） |
+| Agent 4 | `UserService` 类 | 正常路径 + 边界值 + 异常处理 + 集成测试 |
+| ... | ... | ... |
+
+**每个 Agent 为其负责的代码单元生成全类型测试**：
+- 正常路径测试（Happy path）
+- 边界值测试（临界值、极限场景）
+- 异常处理测试（错误恢复、失败处理）
+- 属性测试（Hypothesis/fast-check，如适用）
 
 #### ⛔ 禁止 Mock 约束（铁律）
 
-**Agent 4 服务契约测试必须连接真实服务，禁止使用 Mock**
+**所有涉及服务调用的测试必须连接真实服务，禁止使用 Mock**
 
 禁止使用以下 Mock 相关代码：
 - Python: `@patch`, `MagicMock`, `Mock(`, `mock_`, `unittest.mock`
@@ -86,37 +147,163 @@ grep -E "@patch|MagicMock|Mock\(|mock_|vi\.fn|vi\.mock|jest\.fn|jest\.mock" test
 # 如果检测到，测试生成失败
 ```
 
+**每个 Agent 返回结构化 JSON**：
+```json
+{
+  "agent_id": "agent_1",
+  "code_unit": "validate_email",
+  "file": "validators.py",
+  "tests_generated": [
+    {"name": "test_validate_email_with_valid_email", "type": "happy_path"},
+    {"name": "test_validate_email_with_empty_string", "type": "boundary"},
+    {"name": "test_validate_email_with_no_at_symbol", "type": "boundary"},
+    {"name": "test_validate_email_property", "type": "property"}
+  ],
+  "test_code": "...",
+  "required_fixtures": ["db_session", "test_client"],
+  "mock_violations": []
+}
+```
+
 **⏳ 等待所有 Agent 完成后继续。**
 
 ---
 
-### Phase 3: 汇总去重（串行）
+### Phase 3: 汇总合并（串行）
+
+> **用户进度提示**：在执行每个 Phase 前输出进度信息
+
+```markdown
+📊 /test-gen 执行进度
+
+⏳ Phase 0: 代码范围识别... ✅ 完成（识别 X 个函数/类）
+⏳ Phase 1: 代码分析（X 个代码单元并行）... ⏳ 执行中
+⏳ Phase 2: 测试生成
+⏳ Phase 3: 汇总合并
+```
 
 主 Agent 执行以下汇总任务：
 
-1. **收集所有测试**：合并 10 个 Agent 生成的测试用例
-2. **去重处理**：
-   - 删除重复的测试场景
-   - 合并相似的参数化测试
-   - 保留覆盖范围最广的用例
-3. **Mock 合规检查**：
+1. **收集所有测试**：合并各 Agent 生成的测试用例（每个 Agent 负责独立代码单元，无需去重）
+   - **fixture 统一生成**：Agent 只生成测试函数代码，不生成 conftest.py 或 fixture 定义。主 Agent 根据所有 Agent 返回的 `required_fixtures` 字段，集中生成统一的 fixture 定义，避免多 Agent 并行生成导致的 fixture 重复冲突
+   - **fixture 冲突处理规则**：
+     - 同名 fixture 合并：保留功能最完整的版本（含更多参数化配置的优先）
+     - 依赖冲突：按依赖链顺序排列（被依赖的 fixture 在前）
+     - scope 冲突：取最宽 scope（session > module > function）
+     - 类型冲突：保留与项目技术栈一致的版本（同步/异步根据项目配置决定）
+   - **fixture 冲突检测算法**：
+     ```python
+     # 主 Agent 汇总时执行
+     def merge_fixtures(all_agent_fixtures):
+         grouped = group_by_name(all_agent_fixtures)
+         for name, fixtures in grouped.items():
+             if len(fixtures) > 1:
+                 # 1. 检查类型兼容性（见下方详细规则）
+                 # 2. 按参数化配置数量排序，取最完整版本
+                 # 3. 记录合并日志
+         return merged_fixtures, merge_log
+     ```
+   - **类型兼容性检测详细规则**：
+     ```python
+     def check_type_compatibility(fixtures: list[Fixture]) -> CompatibilityResult:
+         """
+         检测同名 fixture 的类型兼容性
+
+         返回：
+           - compatible: bool - 是否兼容
+           - winner: Fixture - 应保留的版本
+           - reason: str - 决策原因
+         """
+         # 1. 识别 fixture 类型
+         types = []
+         for f in fixtures:
+             if is_async_fixture(f):
+                 types.append("async")
+             else:
+                 types.append("sync")
+
+         # 2. 类型冲突检测
+         unique_types = set(types)
+         if len(unique_types) == 1:
+             # 类型一致，无冲突
+             return CompatibilityResult(compatible=True, ...)
+
+         # 3. 类型不一致时的决策规则
+         # 检查项目配置（pyproject.toml / pytest.ini）
+         project_async_mode = detect_project_async_mode()
+
+         if project_async_mode == "strict_async":
+             # 项目强制异步模式：选择 async fixture
+             winner = select_by_type(fixtures, "async")
+         elif project_async_mode == "sync_only":
+             # 项目不支持异步：选择 sync fixture
+             winner = select_by_type(fixtures, "sync")
+         else:
+             # 默认：选择与大多数测试兼容的版本
+             winner = select_by_majority_usage(fixtures)
+
+         return CompatibilityResult(
+             compatible=False,
+             winner=winner,
+             reason=f"类型冲突：{unique_types}，选择 {winner.type}（项目配置：{project_async_mode}）"
+         )
+
+     def is_async_fixture(fixture: Fixture) -> bool:
+         """
+         识别 async fixture 的规则：
+         1. 函数定义包含 `async def`
+         2. 使用 `@pytest.fixture` 且装饰器链包含 `@pytest_asyncio.fixture`
+         3. fixture 返回类型为 AsyncGenerator 或 Coroutine
+         """
+         # 规则 1：检查函数定义
+         if "async def" in fixture.source_code:
+             return True
+
+         # 规则 2：检查装饰器
+         if "@pytest_asyncio.fixture" in fixture.decorators:
+             return True
+
+         # 规则 3：检查返回类型注解
+         async_return_types = ["AsyncGenerator", "Coroutine", "Awaitable"]
+         if any(t in fixture.return_type for t in async_return_types):
+             return True
+
+         return False
+
+     def detect_project_async_mode() -> str:
+         """
+         检测项目的异步测试配置
+
+         检查位置（按优先级）：
+         1. pyproject.toml [tool.pytest.ini_options] asyncio_mode
+         2. pytest.ini asyncio_mode
+         3. conftest.py 中的 pytest_plugins 是否包含 pytest_asyncio
+
+         返回值：
+         - "strict_async": 项目使用 asyncio_mode=strict
+         - "auto_async": 项目使用 asyncio_mode=auto
+         - "sync_only": 项目未配置异步测试
+         """
+         ...
+     ```
+2. **Mock 合规检查**：
    - 扫描所有生成的测试代码
    - **输出不得包含 Mock 相关代码**（对内部服务）
    - 发现违规立即删除并记录
-4. **格式化输出**：
+3. **格式化输出**：
    - 统一测试命名规范
-   - 按测试类型分组
+   - 按代码单元分组（每个函数/类的测试在一起）
    - 添加测试文档注释
-5. **生成测试文件**：
+4. **生成测试文件**：
    - 输出到 `tests/test_[功能名]_acceptance.py`
 
 **汇总输出**：
 ```
 📊 并行生成统计：
-   - Phase 1 分析 Agent: 10 个全部完成
-   - Phase 2 生成 Agent: 10 个全部完成
-   - 原始测试用例: XX 个
-   - 去重后测试用例: XX 个
+   - 识别代码单元: X 个函数/类
+   - Phase 1 分析 Agent: X 个全部完成
+   - Phase 2 生成 Agent: X 个全部完成
+   - 生成测试用例: XX 个（无重复，每个 Agent 负责独立代码）
    - Mock 合规检查: ✅ 通过（无禁止的 Mock 用法）
 
 📁 输出文件: tests/test_[功能名]_acceptance.py
@@ -130,33 +317,36 @@ grep -E "@patch|MagicMock|Mock\(|mock_|vi\.fn|vi\.mock|jest\.fn|jest\.mock" test
 
 | 失败类型 | 处理策略 |
 |---------|---------|
-| 单个 Agent 超时 | 等待 60 秒后跳过，记录警告，继续执行 |
-| 单个 Agent 异常 | 记录错误日志，继续执行其他 Agent |
-| 多个 Agent 失败（≥3） | 停止执行，报告失败原因，建议重试 |
-| 全部 Agent 失败 | 回退到串行模式，逐个执行 |
+| 单个 Agent 超时 | 等待 60 秒（见 AC 文档超时配置表）后跳过该代码单元，记录警告，继续执行 |
+| 单个 Agent 异常 | 记录错误日志，该代码单元标记为"未生成测试" |
+| 多个 Agent 失败（≥50%） | 停止执行，报告失败原因，建议重试 |
+| 全部 Agent 失败 | 停止执行，报告失败原因，等待用户决策 |
 
 #### 错误恢复
 
 ```
 ⚠️ 并行执行异常：
 
-失败 Agent:
-  - Agent 3 (异常路径分析): 超时
-  - Agent 7 (并发场景分析): 依赖缺失
+失败 Agent（按代码单元）:
+  - Agent 2 (validate_phone): 超时
+  - Agent 4 (UserService): 依赖缺失
 
 处理策略: 跳过失败 Agent，继续执行
-影响评估: 测试覆盖可能不完整，建议后续补充
+影响评估: validate_phone 和 UserService 未生成测试，建议后续单独补充
 
-继续执行? [Y/n]
+继续执行? [Y/n]（推荐 Y，已失败的代码单元可后续单独补充）
 ```
 
 #### Phase 间依赖检查
 
 ```
+Phase 0 → Phase 1 门控检查:
+  - Phase 0 代码识别: 必须成功识别至少 1 个代码单元
+  - 失败时: 停止并报告，提示用户指定目标代码
+
 Phase 1 → Phase 2 门控检查:
-  - Phase 1 完成率: ≥70% (至少 7 个 Agent 成功)
-  - 必须成功的 Agent: Agent 1 (函数签名分析)
-  - 失败时: 停止并报告，不进入 Phase 2
+  - Phase 1 完成率: ≥50%（至少一半代码单元分析成功）
+  - 失败时: 仅对成功分析的代码单元生成测试
 ```
 
 ---
@@ -303,39 +493,33 @@ fi
 
 ## 执行流程
 
+> **Phase 编号说明**：并行架构使用 Phase 0-3（代码范围识别→并行分析→并行生成→汇总），
+> 下方是完整执行视角的细分步骤。
+
 ```
 /test-gen [mode] [target]
     ↓
-Phase 0: 目标识别
-    - 识别要测试的函数/模块
+Phase 0: 代码范围识别（并行架构 Phase 0）
+    - 识别要测试的函数/模块（按代码范围拆分）
     - 检测是否已有测试（增量模式）
     - 检测依赖工具是否安装
+    - 输出：待测代码单元列表（最多 10 个 Agent）
     ↓
-Phase 1: 代码分析
-    - 识别函数签名、参数类型、返回类型
-    - 检测是否有 API 文档 (OpenAPI/Swagger)
+Phase 1: 并行代码分析（并行架构 Phase 1）
+    - N 个 Agent 并行分析各自负责的代码单元
+    - 每个 Agent 做全维度分析：签名、边界、异常、依赖
     - 评估风险等级 (critical/medium/low)
     ↓
-Phase 2: 策略选择
-    - 根据函数类型推荐测试方法
-    - 确定覆盖率目标 (60%/80%/90%)
-    - 生成边界值候选集
-    - 决定 Mock 策略
+Phase 2: 并行测试生成（并行架构 Phase 2）
+    - N 个 Agent 并行生成各自负责的测试
+    - 每个 Agent 生成全类型测试：正常路径、边界值、异常处理
+    - 检测 Mock 合规（禁止 Mock 内部服务）
     ↓
-Phase 3: 测试生成
-    - 生成 FAILING 测试（TDD 起点）
-    - 每条路径 ≥3 个测试用例
-    - 包含正常路径 + 错误路径 + 边界情况
-    ↓
-Phase 4: 质量验证
-    - 运行测试（确认全部失败）
-    - 检查编译成功率 (目标 100%)
-    - Mock 合理性检查
-    ↓
-Phase 5: 输出报告
-    - 测试文件
-    - 预期覆盖率（需运行 coverage 验证）
-    - 下一步建议
+Phase 3: 汇总与输出（并行架构 Phase 3）
+    - 合并各 Agent 生成的测试用例
+    - Mock 合规最终检查
+    - 格式化输出测试文件
+    - 运行测试确认全部 FAILING（TDD 起点）
 ```
 
 ---
@@ -367,7 +551,7 @@ Phase 5: 输出报告
 
 选择操作：
   1. 跳过（已有测试）
-  2. 补充边界用例
+  2. 补充边界用例（推荐，增量提升覆盖率）
   3. 重新生成（覆盖）
   4. 生成属性测试（补充）
 

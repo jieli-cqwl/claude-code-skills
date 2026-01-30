@@ -106,35 +106,57 @@ echo "✅ 门控通过: $CLARIFY_DOC"
 
 ## 并行架构
 
-> **设计目标**：通过 8 Agent 并行执行，大幅提升调研效率
+> **设计目标**：通过 8 Agent 并行执行，每个 Agent 有明确的搜索策略和独占范围
 
 ### Phase 1: 并行信息收集（8 Agent，subagent_type=Explore）
 
-同时启动以下 8 个调研任务（使用 Task 工具）：
+同时启动以下 8 个调研任务（使用 Task 工具），每个 Agent 有独占的搜索范围：
 
-| Agent | 调研任务 | 说明 |
-|-------|---------|------|
-| Agent 1 | GitHub 仓库搜索 | 搜索相关开源项目，优先 Star > 1000 |
-| Agent 2 | Claude Code 最佳实践 | 调研 Claude Code 官方推荐方案 |
-| Agent 3 | Cursor 方案调研 | 调研 Cursor 社区的实践经验 |
-| Agent 4 | Gemini 方案调研 | 调研 Gemini 相关技术方案 |
-| Agent 5 | Google 搜索（技术博客） | 搜索知名团队的技术博客分享 |
-| Agent 6 | Stack Overflow 调研 | 搜索 SO 上的最佳答案和讨论 |
-| Agent 7 | 官方文档搜索 | 查阅框架/库的官方最佳实践 |
-| Agent 8 | 开源项目案例 | 寻找实际落地的开源案例 |
+| Agent | 调研任务 | 搜索策略 | 独占范围 |
+|-------|---------|---------|---------|
+| Agent 1 | GitHub 仓库搜索 | 搜索 `{技术关键词} stars:>500`，筛选 README、架构图 | 开源项目代码和设计 |
+| Agent 2 | 技术博客搜索 | 搜索 `{问题} site:medium.com OR site:dev.to OR site:掘金`，关注实战经验 | 开发者分享的实战文章 |
+| Agent 3 | Stack Overflow | 搜索 `[{技术标签}] {问题} is:answer score:10`，关注高票答案 | 技术问答和最佳实践 |
+| Agent 4 | 官方文档 | 直接访问框架/库官网的 Best Practices / Guide 页面 | 官方推荐方案 |
+| Agent 5 | 企业技术博客 | 搜索 `{问题} site:engineering.*.com OR site:tech.*.com`（大厂工程博客） | 企业级实践案例 |
+| Agent 6 | 学术/白皮书 | 搜索 `{问题} filetype:pdf OR site:arxiv.org`，关注架构设计论文 | 理论基础和研究成果 |
+| Agent 7 | 中文社区 | 搜索 `{问题} site:juejin.cn OR site:segmentfault.com OR site:cnblogs.com` | 中文技术社区实践 |
+| Agent 8 | AI 辅助分析 | 使用 Claude/GPT 分析问题，给出方案建议（标注为 AI 生成） | AI 视角的方案建议 |
+
+**每个 Agent 的 Prompt 模板**：
+
+```markdown
+你是调研专家，负责「[调研任务]」。
+
+## 搜索策略
+使用以下搜索查询：
+- 查询 1: [具体搜索词]
+- 查询 2: [具体搜索词]
+
+## 独占范围
+你只负责从 [范围描述] 收集信息，不要重复其他 Agent 的工作。
+
+## 输出要求
+返回 2-3 个最相关的来源，每个来源包含：
+- 来源名称和链接
+- 核心思路（50字以内）
+- 优势和劣势
+- 适用场景
+```
 
 每个 Agent 返回结构化 JSON：
 ```json
 {
   "agent_id": "agent_N",
-  "agent_name": "描述",
+  "search_type": "搜索类型",
+  "queries_used": ["实际使用的搜索词1", "搜索词2"],
   "status": "success | failed | timeout",
   "output": {
     "sources": [
       {
         "name": "来源名称",
         "url": "链接",
-        "summary": "核心思路",
+        "summary": "核心思路（≤50字）",
         "pros": ["优势1", "优势2"],
         "cons": ["劣势1", "劣势2"],
         "applicable_scenarios": "适用场景"
@@ -148,29 +170,93 @@ echo "✅ 门控通过: $CLARIFY_DOC"
 
 ---
 
-### Phase 2: 并行方案分析（8 Agent，subagent_type=general-purpose）
+### Phase 2: 并行方案分析（按候选方案拆分，subagent_type=general-purpose）
 
-主 Agent 汇总 Phase 1 结果后，提取候选方案，启动 8 个 Agent 各分析一个候选方案。
+主 Agent 汇总 Phase 1 结果后，提取 N 个候选方案，启动 N 个 Agent（subagent_type=general-purpose）各深入分析一个候选方案（最多 8 个）。
 
-每个 Agent 负责：
-- 深入分析一个候选方案
+**⚠️ 候选方案冻结机制（Phase 2 启动前必须执行）**：
+
+```markdown
+## 候选方案冻结点
+
+**冻结时机**：Phase 1 所有 Agent 返回后、Phase 2 启动前
+
+**冻结操作**：
+1. 主 Agent 汇总 Phase 1 所有 Agent 的 sources
+2. 去重合并，生成候选方案列表（记录来源 Agent）
+3. **冻结**：将候选方案列表写入临时状态，禁止后续修改
+4. 输出冻结确认：
+
+   ```
+   🔒 候选方案已冻结（共 N 个）
+
+   | 方案编号 | 方案名称 | 来源 Agent |
+   |---------|---------|-----------|
+   | 1 | [方案A] | Agent 2, Agent 5 |
+   | 2 | [方案B] | Agent 1 |
+   | ... | ... | ... |
+
+   Phase 2 将基于此列表分配任务，列表不可变更。
+   ```
+
+**冻结后保证**：
+- Phase 2 启动的 Agent 数量 = 冻结列表中的方案数量（最多 8）
+- 每个 Agent 的任务分配基于冻结列表，不受后续输入影响
+- 若 Phase 1 有延迟返回的 Agent，其结果不纳入 Phase 2（记录日志）
+
+**异常处理**：
+- 冻结列表为空 → 报告错误，终止流程
+- 冻结列表仅 1 个方案 → 跳过 Phase 2，直接进入 Phase 3 汇总
+```
+
+**拆分策略**：每个 Agent 负责分析一个独立的候选方案，不同 Agent 分析不同方案。
+
+**候选方案数量与 Agent 分配规则**：
+
+| 候选方案数量 | Agent 数量 | 分配策略 |
+|-------------|-----------|---------|
+| 1-2 | N（=方案数） | 每个 Agent 1 个候选方案 |
+| 3-8 | N（=方案数） | 每个 Agent 1 个候选方案 |
+| >8 | 8 | 按相似度分组，每个 Agent 1-2 个相似方案 |
+
+**>8 方案分组算法**：
+1. 计算每个 Agent 负责的方案数：`ceil(N/8)`（例如 9 方案时为 2，16 方案时为 2）
+2. 按技术栈相似度分组：相同框架/语言的方案优先分到同一 Agent
+3. 分组不均匀时：前 `N mod 8` 个 Agent 各多负责 1 个方案
+4. 示例：10 个方案时，Agent 1-2 各负责 2 个方案，Agent 3-8 各负责 1 个方案
+
+| Agent | 负责范围 | 分析内容（全维度） |
+|-------|---------|-------------------|
+| Agent 1 | 候选方案 A | 技术栈匹配 + 复杂度 + 工作量 + 风险 |
+| Agent 2 | 候选方案 B | 技术栈匹配 + 复杂度 + 工作量 + 风险 |
+| Agent 3 | 候选方案 C | 技术栈匹配 + 复杂度 + 工作量 + 风险 |
+| ... | ... | ... |
+
+**每个 Agent 的职责**：
+- 深入分析其负责的候选方案
 - 评估与项目技术栈的匹配度
 - 评估实现复杂度和工作量
 - 识别潜在风险
+- **禁止分析其他候选方案**（避免重复）
 
 每个 Agent 返回结构化 JSON：
 ```json
 {
   "agent_id": "agent_N",
-  "agent_name": "方案分析",
+  "solution_name": "候选方案名称",
+  "source": "来源（Phase 1 哪个 Agent 发现的）",
   "status": "success | failed | timeout",
-  "output": {
-    "solution_name": "方案名称",
+  "analysis": {
     "tech_stack_match": "高/中/低",
+    "match_reason": "匹配原因",
     "complexity": "高/中/低",
+    "complexity_reason": "复杂度原因",
     "estimated_effort": "X 天",
-    "risks": ["风险1", "风险2"],
-    "recommendation_score": 1-10
+    "risks": [
+      {"risk": "风险描述", "mitigation": "缓解措施"}
+    ],
+    "recommendation_score": 1-10,
+    "score_reason": "评分理由"
   }
 }
 ```
@@ -190,12 +276,48 @@ echo "✅ 门控通过: $CLARIFY_DOC"
 
 ## 错误处理
 
+> **配置来源**：`docs/需求文档/clarify_skills并行优化.md` 第 7.3 节超时配置表
+
 | 场景 | 处理方式 |
 |------|---------|
-| 单个 Agent 超时（>120s） | 标记失败，继续其他 Agent |
+| 单个 Agent 超时（>120s，见 AC 文档） | 标记失败，继续其他 Agent |
 | 单个 Agent 崩溃 | 标记失败，继续其他 Agent |
 | 失败 Agent > 50% | 整体任务失败，报告错误 |
 | 网络异常 | 重试 1 次，仍失败则标记 |
+
+### ⚠️ 高价值来源失败处理
+
+以下来源被视为**高价值来源**，是方案探索的核心参考：
+- **Agent 1（GitHub 仓库搜索）**：开源实现和最佳实践
+- **Agent 4（官方文档）**：权威技术指南
+
+**失败处理**：
+
+| 失败场景 | 处理方式 |
+|---------|---------|
+| GitHub 或 官方文档 单个失败 | 标记失败，继续执行，汇总时标注"高价值来源缺失" |
+| GitHub **和** 官方文档 同时失败 | **停止执行**，报告失败，等待用户决策 |
+
+**同时失败时的提示模板**：
+
+```markdown
+❌ 高价值来源失败
+
+GitHub 仓库搜索和官方文档搜索均失败：
+- GitHub: [失败原因]
+- 官方文档: [失败原因]
+
+这两个来源是方案探索的核心参考，缺失将导致：
+1. 无法获取业界最佳实践
+2. 推荐方案质量无法保证
+
+请选择：
+1. 重试高价值来源（推荐）
+2. 终止本次探索
+```
+
+**用户选择"重试"后**：重新启动 Agent 1 和 Agent 4
+**用户选择"终止"后**：停止执行，不输出结果
 
 ---
 
@@ -243,11 +365,21 @@ ls docs/需求文档/clarify_*.md 2>/dev/null
 
 ### Step 2: 执行 Phase 2 并行方案分析
 
-汇总 Phase 1 结果，启动 8 个 Agent 并行分析（参见上方「并行架构 - Phase 2」）。
+汇总 Phase 1 结果，启动 N 个 Agent（N≤8，subagent_type=general-purpose）并行分析（参见上方「并行架构 - Phase 2」）。
 
 ---
 
 ### Step 3: 执行 Phase 3 汇总输出
+
+> **用户进度提示**：在执行每个 Phase 前输出进度信息
+
+```markdown
+📊 /explore 执行进度
+
+⏳ Phase 1: 信息收集（GitHub/文档/博客等 8 个来源）... ✅ 完成（收集 X 个参考）
+⏳ Phase 2: 方案分析（对 N 个候选方案深入评估）... ✅ 完成
+⏳ Phase 3: 汇总输出... ⏳ 执行中
+```
 
 综合所有结果，筛选可行方案。
 
