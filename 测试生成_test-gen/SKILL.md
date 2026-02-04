@@ -377,13 +377,13 @@ Phase 1 → Phase 2 门控检查:
 
 | 文档 | 路径 | 必须 | 检查命令 |
 |------|------|------|---------|
-| **AC 文档** | `docs/需求文档/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求文档/clarify_*.md` |
+| **AC 文档** | `docs/需求澄清/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求澄清/clarify_*.md` |
 | **计划文档** | `docs/开发文档/plan_[功能名].md` | ⚠️ 推荐 | `ls docs/开发文档/plan_*.md` |
 
 **门控规则**：
 ```bash
 # 门控检查：AC 文档必须存在
-CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+CLARIFY_DOC=$(ls docs/需求澄清/clarify_*.md 2>/dev/null | head -1)
 if [ -z "$CLARIFY_DOC" ]; then
   echo "❌ 门控失败: AC 文档不存在"
   echo "   修复: 先执行 /clarify 生成需求文档"
@@ -773,7 +773,7 @@ class TestValidateEmailBoundary:
 > 🆕 **测试先行模式**：在 /plan 之后、/run-plan 之前执行
 
 ```bash
-/test-gen from-clarify docs/需求文档/clarify_用户认证.md
+/test-gen from-clarify docs/需求澄清/clarify_用户认证.md
 ```
 
 **输入**：/clarify 文档中的 AC 表格（单一来源）
@@ -807,7 +807,7 @@ class TestValidateEmailBoundary:
 /test-gen ac docs/开发文档/plan_用户认证.md
 
 # ✅ 推荐
-/test-gen from-clarify docs/需求文档/clarify_用户认证.md
+/test-gen from-clarify docs/需求澄清/clarify_用户认证.md
 ```
 
 **如果仍需使用**（仅用于兼容旧项目）：
@@ -1170,7 +1170,7 @@ tests/
 
 📁 输出文件：tests/test_[功能名]_acceptance.py
 📎 前置文档：
-   - AC 文档：docs/需求文档/clarify_[功能名].md
+   - AC 文档：docs/需求澄清/clarify_[功能名].md
    - 计划文档：docs/开发文档/plan_[功能名].md
 
 🧪 生成统计:

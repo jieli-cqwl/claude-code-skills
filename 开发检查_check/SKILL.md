@@ -19,7 +19,7 @@ description: 开发检查。开发完成后的一站式自检，使用多 Agent 
 当用户使用以下任一方式时，立即激活此 skill：
 - 说"**检查一下**"或"**开发检查**"（主触发词）
 - 使用命令：`/check`
-- 说"自检"、"代码有问题吗"
+- 说"自测下"、"代码有问题吗"
 - 说"看看有没有遗漏"
 - 说"检查完成了吗"
 
@@ -174,23 +174,64 @@ git diff --stat HEAD~1
 
 ### Phase 2: 并行检查（核心优化）
 
-**使用 Task 工具同时启动 7 个 Agent**：
+> ⚠️ **真正并行的关键**：必须在**一条消息**中发送多个 Task 工具调用。
+> 如果分多条消息发送，Task 会串行执行，失去并行优势。
+
+**并行执行策略（分批 + 重试）**：
+
+为避免 API 并发限制，采用分批执行策略：
+
+| 批次 | Agent | 说明 |
+|------|-------|------|
+| **第一批（5 个）** | Agent1-5 | 铁律、后端、前端、代码质量、文档同步 |
+| **第二批（4 个）** | Agent6-9 | 服务启动、需求覆盖、TDD 验证、Hooks 检测 |
+
+**重试机制**：
+```python
+MAX_RETRY = 2  # 单个 Agent 最多重试 2 次
+
+for batch in [batch_1, batch_2]:
+    results = execute_batch(batch)
+
+    # 检查失败的 Agent
+    failed_agents = [a for a in results if a.status == "failed"]
+
+    for agent in failed_agents:
+        for attempt in range(MAX_RETRY):
+            result = retry_agent(agent)
+            if result.status == "success":
+                break
+            print(f"⚠️ {agent.name} 重试 {attempt + 1}/{MAX_RETRY}")
+
+        if result.status == "failed":
+            print(f"❌ {agent.name} 重试失败，标记为未完成")
+```
+
+**使用 Task 工具启动 Agent**（分两批，每批一条消息）：
 
 ```markdown
-同时启动以下 7 个检查任务（使用 Task 工具，subagent_type="Explore"）：
+## 第一批（5 个 Agent 并行）
+同时启动以下检查任务（在一个响应中发送 5 个 Task 工具调用）：
 
 1. **Agent1: 铁律检查**（与 implementer.md 的 7 条铁律对应）
-   - **HTTP 状态码检查**：
+   - **HTTP 状态码检查（增强版）**：
      - Python: 检查 `requests.get/post` 后是否有 `raise_for_status()`
+     - Python: 检查是否设置 `timeout` 参数（禁止无超时请求）
+     - Python: 检查是否处理 `requests.exceptions.RequestException`
+     - Python: 检查是否处理重定向（`allow_redirects` 参数）
      - TS/JS: 检查 `fetch` 后是否有 `if (!res.ok)` 或类似检查
+     - TS/JS: 检查是否设置 `signal` 或 `timeout` 选项
+     - TS/JS: 检查是否处理 `AbortError` 和网络异常
    - **降级逻辑检查**：
      - Java: `orElse(null)`, `orElseGet(() -> null)`, `catch.*return null`
      - Python: `except:.*pass`, `or None`, `if.*else None`
      - TS/JS: `catch.*return null`, `|| null`, `?? null`
-   - **硬编码检查**：
+   - **硬编码检查（增强版）**：
      - URL: `http://localhost`, `127.0.0.1`, `://.*:\d{4,5}`
      - 密钥: `api_key.*=`, `secret.*=`, `password.*=`, `token.*=`
      - 配置: `timeout.*=.*\d+`, `retry.*=.*\d+`
+     - **环境变量使用正确性**：检查 `os.environ.get` 是否有默认值
+     - **配置路径硬编码**：检查 `/etc/`, `/home/`, `C:\\` 等绝对路径
    - **常量分层检查**（详见 `~/.claude/reference/硬编码治理规范.md`）：
      - 跨模块导入模块级常量（禁止 `from src.{module_a}.constants import` 在其他模块使用）
      - 模块常量缺少前缀（模块常量必须带模块前缀如 `QFT_`）
@@ -250,7 +291,15 @@ git diff --stat HEAD~1
    - **输出格式**：逐条对照表
 ```
 
-**执行方式**（在一条消息中发送多个 Task 调用）：
+**执行方式**（⚠️ 必须在一条消息中发送所有 Task 调用，实现真正并行）：
+
+```python
+# ✅ 正确：一条消息发送多个 Task（真正并行）
+# 在同一个响应中使用多个 <invoke name="Task"> 块
+
+# ❌ 错误：分多条消息发送（串行执行）
+# 先发 Task1，等结果，再发 Task2...
+```
 
 ```
 <Task>
@@ -261,18 +310,24 @@ git diff --stat HEAD~1
        - Java: grep -rE 'orElse\(null\)|orElseGet\(\(\) -> null\)|catch.*return null' --include='*.java'
        - Python: grep -rE 'except:.*pass|or None|if.*else None' --include='*.py'
        - TS/JS: grep -rE 'catch.*return null|\|\| null|\?\? null' --include='*.ts' --include='*.tsx'
-    2. 硬编码：
+    2. 硬编码（增强版）：
        - URL: grep -rE 'http://localhost|127\.0\.0\.1|://.*:[0-9]{4,5}' --include='*.java' --include='*.py' --include='*.ts'
        - 密钥: grep -rE 'api_key.*=|secret.*=|password.*=|token.*=' --include='*.java' --include='*.py' --include='*.ts'
-    3. 常量分层（详见硬编码治理规范.md）：
+       - 环境变量默认值: grep -rE 'os\.environ\.get\([^,]+\)$' --include='*.py' | 检查是否缺少默认值
+       - 配置路径: grep -rE '/etc/|/home/|C:\\\\' --include='*.py' --include='*.ts'
+    3. HTTP 状态检查（增强版）：
+       - Python 无超时: grep -rE 'requests\.(get|post|put|delete)\([^)]*\)' --include='*.py' | 检查是否有 timeout 参数
+       - Python 无异常处理: 检查 requests 调用是否在 try-except 块中
+       - TS/JS 无超时: grep -rE 'fetch\(' --include='*.ts' --include='*.tsx' | 检查是否有 signal/timeout
+    4. 常量分层（详见硬编码治理规范.md）：
        - 跨模块导入: grep -rn 'from src\.\(adapters\|services\|modules\)\.[^.]\+\.constants import' src/ | 检查是否在其他模块中使用
        - 模块常量前缀: 检查 src/**/constants.py 中的常量是否带模块前缀
        - 常量膨胀: wc -l src/constants.py src/**/constants.py 2>/dev/null | 超过200行需拆分
-    4. Mock：
+    5. Mock：
        - Python: grep -rE '@patch|MagicMock|Mock\(|mock_' --include='*.py' tests/
        - TS/JS: grep -rE 'vi\.fn|vi\.mock|jest\.fn|jest\.mock' --include='*.ts' --include='*.tsx'
-    5. 未完成代码：grep -rE 'TODO|FIXME|XXX|HACK' --include='*.java' --include='*.py' --include='*.ts'
-    6. 代码复用：检查新增文件是否有「搜索关键词」和「为什么不复用」注释（如有新增文件）
+    6. 未完成代码：grep -rE 'TODO|FIXME|XXX|HACK' --include='*.java' --include='*.py' --include='*.ts'
+    7. 代码复用：检查新增文件是否有「搜索关键词」和「为什么不复用」注释（如有新增文件）
     返回：发现的违反项列表（文件:行号:违规类型:内容），或'无违反'"
 </Task>
 
@@ -758,9 +813,13 @@ git status --short && git diff --stat HEAD~1
 | 禁止行为 | 说明 |
 |---------|------|
 | 跳过自我审问 | Phase 0 必须先完成 |
-| 串行执行检查 | 必须使用 Task 并行 |
+| **串行执行检查** | **必须在一条消息中发送所有 Task 调用，实现真正并行** |
+| 分多条消息发送 Task | 这会导致 Task 串行执行，失去并行优势 |
 | 忽略 Agent 返回的错误 | 所有错误必须汇总 |
 | 假设性结论 | 必须有实际输出证据 |
+| HTTP 调用无超时 | requests/fetch 必须设置 timeout |
+| HTTP 调用无异常处理 | 必须 try-catch 并处理网络异常 |
+| 环境变量无默认值 | `os.environ.get(key)` 必须有默认值 |
 
 ---
 

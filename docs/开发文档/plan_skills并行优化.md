@@ -6,7 +6,7 @@
 
 ## 前置文档
 
-- AC 文档：`docs/需求文档/clarify_skills并行优化.md`
+- AC 文档：`docs/需求澄清/clarify_skills并行优化.md`
 - 设计文档：`docs/设计文档/设计_skills并行优化.md`
 - 调研文档：`docs/设计文档/调研_skills并行优化.md`
 
@@ -75,7 +75,7 @@
 
 > ⚠️ **禁止重新定义 AC**：此处只能引用 /clarify 输出的 AC 表格，不能修改或新增。
 
-**AC 来源文档**：`docs/需求文档/clarify_skills并行优化.md`
+**AC 来源文档**：`docs/需求澄清/clarify_skills并行优化.md`
 
 **引用的 AC 列表**：
 
@@ -115,7 +115,7 @@
 - AC-EDGE-3: `/design` 一致性校验
 - AC-EDGE-4: `/experts` 分歧处理
 
-**完整 AC 表格见**：[clarify_skills并行优化.md](docs/需求文档/clarify_skills并行优化.md#4-验收标准)
+**完整 AC 表格见**：[clarify_skills并行优化.md](docs/需求澄清/clarify_skills并行优化.md#4-验收标准)
 
 ---
 
@@ -123,7 +123,7 @@
 
 > ⚠️ **门控要求**：测试必须在开发之前生成
 
-- [x] AC 来源文档存在：`docs/需求文档/clarify_skills并行优化.md`
+- [x] AC 来源文档存在：`docs/需求澄清/clarify_skills并行优化.md`
 - [ ] 已执行 `/test-gen from-clarify` 生成测试
 - [ ] FAILING 测试文件存在：`tests/test_skills_parallel_acceptance.py`
 

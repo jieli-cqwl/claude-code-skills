@@ -4,7 +4,7 @@
 **状态**：已确认
 **文档路径**：docs/设计文档/设计_skills并行优化.md
 **前置文档**：
-- AC 文档：docs/需求文档/clarify_skills并行优化.md
+- AC 文档：docs/需求澄清/clarify_skills并行优化.md
 - 调研文档：docs/设计文档/调研_skills并行优化.md
 
 ---

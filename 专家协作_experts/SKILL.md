@@ -377,7 +377,7 @@ Tech Lead 在会诊阶段必须执行以下检查：
 
 ### Agent 超时处理
 
-> **配置来源**：`docs/需求文档/clarify_skills并行优化.md` 第 7.3 节超时配置表
+> **配置来源**：`docs/需求澄清/clarify_skills并行优化.md` 第 7.3 节超时配置表
 
 ```yaml
 单个 Agent 超时: 60 秒  # 见 AC 文档超时配置表

@@ -16,6 +16,79 @@ description: 架构设计。在方案探索（/explore）确定技术方案后�
 
 ---
 
+## 按需执行指南（P2 增强）
+
+> **原则**：不是所有需求都需要完整架构设计，根据规模智能判断
+
+### 何时需要 /design
+
+| 需求规模 | AC 数量 | 是否需要 /design | 说明 |
+|---------|--------|-----------------|------|
+| **小** | ≤ 3 | ❌ 跳过 | 直接 /plan，无需设计 |
+| **中** | 4-8 | ⚠️ 简化版 | 只做接口设计，跳过架构分析 |
+| **大** | > 8 | ✅ 完整版 | 完整架构设计 |
+
+### 自动判断逻辑
+
+```bash
+# 从 AC 文档分析需要哪种 /design 模式
+analyze_design_mode() {
+    local clarify_doc="$1"
+
+    # 统计 AC 数量
+    AC_COUNT=$(grep -c "^| AC-" "$clarify_doc" 2>/dev/null || echo "0")
+
+    # 统计涉及模块数
+    MODULE_COUNT=$(grep -E "后端|前端|数据库|API|服务" "$clarify_doc" | wc -l)
+
+    # 判断设计模式
+    if [ "$AC_COUNT" -le 3 ] && [ "$MODULE_COUNT" -le 2 ]; then
+        echo "skip"
+        echo "💡 建议：小需求（AC ≤ 3），可跳过 /design，直接执行 /plan"
+    elif [ "$AC_COUNT" -le 8 ]; then
+        echo "simplified"
+        echo "📋 中需求（AC 4-8），执行简化版 /design（只做接口设计）"
+    else
+        echo "full"
+        echo "📐 大需求（AC > 8），执行完整版 /design"
+    fi
+}
+```
+
+### 设计模式对比
+
+| 模式 | 输出内容 | 适用场景 |
+|------|---------|---------|
+| **跳过** | 无 | 小需求，直接写 plan |
+| **简化版** | 接口设计 + 数据模型 | 中需求，快速设计 |
+| **完整版** | 模块划分 + 接口设计 + 数据模型 + 架构图 | 大需求，完整设计 |
+
+### 简化版 /design 模板
+
+```markdown
+# [功能名称] 简化设计
+
+## 接口设计
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| 创建 | POST | /api/xxx | ... |
+| 查询 | GET | /api/xxx | ... |
+
+## 数据模型
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | int | 主键 |
+| ... | ... | ... |
+
+## 下一步
+
+直接执行 /plan
+```
+
+---
+
 ## 文档契约（铁律）
 
 > **原则**：没有输入文档 → 不能执行；没有输出文档 → 不算完成
@@ -24,13 +97,13 @@ description: 架构设计。在方案探索（/explore）确定技术方案后�
 
 | 文档 | 路径 | 必须 | 检查命令 |
 |------|------|------|---------|
-| **AC 文档** | `docs/需求文档/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求文档/clarify_*.md` |
+| **AC 文档** | `docs/需求澄清/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求澄清/clarify_*.md` |
 | **调研文档** | `docs/设计文档/调研_[功能名].md` | ⚠️ 推荐 | `ls docs/设计文档/调研_*.md` |
 
 **门控规则**：
 ```bash
 # 门控检查：AC 文档必须存在
-CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+CLARIFY_DOC=$(ls docs/需求澄清/clarify_*.md 2>/dev/null | head -1)
 if [ -z "$CLARIFY_DOC" ]; then
   echo "❌ 门控失败: AC 文档不存在"
   echo "   修复: 先执行 /clarify 生成需求文档"
@@ -145,14 +218,14 @@ fi
 
 必须有以下输入：
 
-1. **AC 来源文档**（必须）：`docs/需求文档/clarify_[功能名].md`
+1. **AC 来源文档**（必须）：`docs/需求澄清/clarify_[功能名].md`
 2. `/explore` 的输出（推荐方案）或用户明确的技术方案说明
 
 **检查 AC 文档**：
 
 ```bash
 # 检查 AC 文档是否存在
-ls docs/需求文档/clarify_*.md 2>/dev/null
+ls docs/需求澄清/clarify_*.md 2>/dev/null
 ```
 
 如果 AC 文档不存在，建议先执行 `/clarify`。
@@ -169,7 +242,7 @@ ls docs/需求文档/clarify_*.md 2>/dev/null
 ```markdown
 ## 技术方案和 AC 确认
 
-**AC 来源文档**：`docs/需求文档/clarify_[功能名].md`
+**AC 来源文档**：`docs/需求澄清/clarify_[功能名].md`
 
 **方案来源**：[/explore 输出 或 用户说明]
 
@@ -429,7 +502,7 @@ Repository 层（数据访问）
 
 **⚠️ Phase 1a 专属超时和恢复机制**：
 
-> **配置来源**：`docs/需求文档/clarify_skills并行优化.md` 第 7.3 节超时配置表
+> **配置来源**：`docs/需求澄清/clarify_skills并行优化.md` 第 7.3 节超时配置表
 
 - **超时时间**：90 秒（见 AC 文档，高于普通 Agent 的 60 秒，因为数据模型设计更复杂）
 - **超时处理**：
@@ -616,7 +689,7 @@ Phase 1b 状态: 检测到 X 个 Agent 失败（≥3），已停止执行。
 **状态**：已确认
 **文档路径**：docs/设计文档/设计_[功能名].md
 **前置文档**：
-- AC 文档：docs/需求文档/clarify_[功能名].md
+- AC 文档：docs/需求澄清/clarify_[功能名].md
 - 调研文档：docs/设计文档/调研_[功能名].md（如有）
 
 ---
@@ -753,7 +826,7 @@ Phase 1b 状态: 检测到 X 个 Agent 失败（≥3），已停止执行。
    - 数据表：X 个
 
 📎 前置文档：
-   - AC 文档：docs/需求文档/clarify_[功能名].md
+   - AC 文档：docs/需求澄清/clarify_[功能名].md
    - 调研文档：docs/设计文档/调研_[功能名].md
 
 🎯 下一步：

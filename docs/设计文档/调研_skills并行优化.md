@@ -10,7 +10,7 @@
 
 当前多数 Skills 采用串行执行模式，效率低下。用户有"很多员工"（子 Agent 可用），希望每个应该并行的地方都开 8-10 个 Agent 来提高效率。需要调研业界最佳实践，确定最优的并行执行方案。
 
-**AC 来源文档**：`docs/需求文档/clarify_skills并行优化.md`
+**AC 来源文档**：`docs/需求澄清/clarify_skills并行优化.md`
 
 **核心 AC 摘要**：
 - AC-1.x: `/explore` 需要 8 Agent 并行信息收集 + 8 Agent 并行方案分析

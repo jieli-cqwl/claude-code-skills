@@ -3,11 +3,17 @@
 **需求名称**：auto-dev 集成 test-gen
 **澄清日期**：2026-01-30
 **状态**：已确认
-**文档路径**：docs/需求文档/clarify_auto-dev集成test-gen.md
+**文档路径**：docs/需求澄清/clarify_auto-dev集成test-gen.md
 
 ---
 
 ### 0. 项目上下文
+
+**功能类型**：[Skills开发]
+
+> ⚠️ **重要**：此标记决定是否应用全栈开发规范
+> - 全栈：需要前后端同步完成
+> - 纯后端/纯前端/CLI/Skills：不强制要求全栈
 
 **相关规范**：
 - `~/.claude/rules/RULES.md` - 项目铁律（禁止降级、禁止硬编码、禁止 Mock）

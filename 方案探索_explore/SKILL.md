@@ -16,6 +16,60 @@ description: 方案探索。调研业界最佳实践（至少5个来源，包括
 
 ---
 
+## 按需执行指南（P2 增强）
+
+> **原则**：不是所有需求都需要方案探索，根据规模智能判断
+
+### 何时需要 /explore
+
+| 需求规模 | AC 数量 | 是否需要 /explore | 说明 |
+|---------|--------|------------------|------|
+| **小** | ≤ 3 | ❌ 跳过 | 直接 /plan，无需探索 |
+| **中** | 4-8 | ⚠️ 可选 | 有技术不确定性时执行 |
+| **大** | > 8 | ✅ 必须 | 复杂功能必须调研 |
+
+### 自动判断逻辑
+
+```bash
+# 从 AC 文档分析是否需要 /explore
+analyze_need_explore() {
+    local clarify_doc="$1"
+
+    # 统计 AC 数量
+    AC_COUNT=$(grep -c "^| AC-" "$clarify_doc" 2>/dev/null || echo "0")
+
+    # 检查是否有技术不确定性标记
+    HAS_UNCERTAINTY=$(grep -c "技术方案待定\|需要调研\|不确定" "$clarify_doc" 2>/dev/null || echo "0")
+
+    # 判断是否需要 /explore
+    if [ "$AC_COUNT" -le 3 ] && [ "$HAS_UNCERTAINTY" -eq 0 ]; then
+        echo "skip"  # 小需求，无不确定性，跳过
+        echo "💡 建议：小需求（AC ≤ 3），可跳过 /explore，直接执行 /design 或 /plan"
+    elif [ "$AC_COUNT" -gt 8 ]; then
+        echo "required"  # 大需求，必须探索
+        echo "📋 大需求（AC > 8），建议执行 /explore 调研业界方案"
+    else
+        echo "optional"  # 中需求，可选
+        echo "⚠️ 中需求（AC 4-8），如有技术不确定性建议执行 /explore"
+    fi
+}
+```
+
+### 跳过 /explore 的条件
+
+满足以下**所有条件**时，可以跳过 /explore：
+- ✅ AC 数量 ≤ 3
+- ✅ 技术方案明确（无"待定"、"需调研"标记）
+- ✅ 使用项目已有的技术栈
+- ✅ 无外部依赖或集成
+
+**跳过时的流程**：
+```
+/clarify → /design（简化版）→ /plan → /run-plan
+```
+
+---
+
 ## 文档契约（铁律）
 
 > **原则**：没有输入文档 → 不能执行；没有输出文档 → 不算完成
@@ -24,12 +78,12 @@ description: 方案探索。调研业界最佳实践（至少5个来源，包括
 
 | 文档 | 路径 | 必须 | 检查命令 |
 |------|------|------|---------|
-| **AC 文档** | `docs/需求文档/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求文档/clarify_*.md` |
+| **AC 文档** | `docs/需求澄清/clarify_[功能名].md` | ✅ 必须 | `ls docs/需求澄清/clarify_*.md` |
 
 **门控规则**：
 ```bash
 # 门控检查：AC 文档必须存在
-CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+CLARIFY_DOC=$(ls docs/需求澄清/clarify_*.md 2>/dev/null | head -1)
 if [ -z "$CLARIFY_DOC" ]; then
   echo "❌ 门控失败: AC 文档不存在"
   echo "   修复: 先执行 /clarify 生成需求文档"
@@ -276,7 +330,7 @@ echo "✅ 门控通过: $CLARIFY_DOC"
 
 ## 错误处理
 
-> **配置来源**：`docs/需求文档/clarify_skills并行优化.md` 第 7.3 节超时配置表
+> **配置来源**：`docs/需求澄清/clarify_skills并行优化.md` 第 7.3 节超时配置表
 
 | 场景 | 处理方式 |
 |------|---------|
@@ -329,7 +383,7 @@ GitHub 仓库搜索和官方文档搜索均失败：
 
 ```bash
 # 检查 AC 文档
-ls docs/需求文档/clarify_*.md 2>/dev/null
+ls docs/需求澄清/clarify_*.md 2>/dev/null
 ```
 
 如果 AC 文档存在，读取并确认：
@@ -337,7 +391,7 @@ ls docs/需求文档/clarify_*.md 2>/dev/null
 ```markdown
 ## 需求和 AC 确认
 
-**AC 来源文档**：`docs/需求文档/clarify_[功能名].md`
+**AC 来源文档**：`docs/需求澄清/clarify_[功能名].md`
 
 **要实现什么**：[一句话描述]
 

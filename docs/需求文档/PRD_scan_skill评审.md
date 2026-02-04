@@ -3,7 +3,7 @@
 **需求名称**：/scan skill 设计合理性评审
 **澄清日期**：2025-01-29
 **状态**：已确认
-**文档路径**：docs/需求文档/clarify_scan_skill评审.md
+**文档路径**：docs/需求澄清/clarify_scan_skill评审.md
 
 ---
 

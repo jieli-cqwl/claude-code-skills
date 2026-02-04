@@ -16,7 +16,7 @@
 
 ```bash
 # 门控1: 检查 AC 来源文档
-CLARIFY_DOC=$(ls docs/需求文档/clarify_*.md 2>/dev/null | head -1)
+CLARIFY_DOC=$(ls docs/需求澄清/clarify_*.md 2>/dev/null | head -1)
 if [ -z "$CLARIFY_DOC" ]; then
   echo "❌ 门控1失败: AC 来源文档不存在"
   echo "   修复: 执行 /clarify 生成需求文档和 AC 表格"
@@ -59,7 +59,7 @@ echo "✅ 所有门控检查通过，可以继续执行"
 门控1失败（AC 文档不存在）
     ↓
 执行 /clarify 生成需求文档
-    ↓ 输出: docs/需求文档/clarify_[功能名].md
+    ↓ 输出: docs/需求澄清/clarify_[功能名].md
 
 门控2失败（计划文档问题）
     ↓
@@ -68,7 +68,7 @@ echo "✅ 所有门控检查通过，可以继续执行"
 
 门控3失败（测试文件不存在）
     ↓
-执行 /test-gen from-clarify docs/需求文档/clarify_[功能名].md
+执行 /test-gen from-clarify docs/需求澄清/clarify_[功能名].md
     ↓ 输出: tests/test_[功能名]_acceptance.py
 
 所有门控通过后

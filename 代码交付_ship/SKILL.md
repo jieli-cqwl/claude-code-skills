@@ -2,22 +2,13 @@
 name: ship
 command: ship
 user_invocable: true
-description: 代码交付。开发完成并通过检查后使用，自动完成 git add、commit（自动生成消息供确认）、push 和可选的 PR 创建。在 /check 或 /qa 之后使用。
+description: 代码交付。一键提交并推送代码，AI 自动处理冲突。适合非技术用户。
 ---
 
 # 代码交付 (Ship)
 
-> **角色**：交付助手
-> **目标**：一键完成代码提交、推送和 PR 创建
-> **原则**：自动化但不失控制，关键步骤需用户确认
-
----
-
-## 核心原则
-
-**"交付是开发的最后一公里，自动化但保留控制权"**
-
-所有变更在推送前必须经过用户确认，避免意外提交敏感信息或错误代码。
+> **目标**：一键提交并推送代码
+> **特点**：AI 自动处理冲突，无需手动操作
 
 ---
 
@@ -26,353 +17,309 @@ description: 代码交付。开发完成并通过检查后使用，自动完成 
 当用户使用以下任一方式时，立即激活此 skill：
 - 说"**提交代码**"或"**代码交付**"（主触发词）
 - 使用命令：`/ship`
-- 说"发布"、"推上去"
-- 说"搞定了提交吧"
-- 说"commit 一下"、"push 一下"
+- 说"推送代码"、"push 一下"
+- 说"提交并推送"、"commit 并 push"
+- 说"代码写完了，帮我提交"
+- 说"创建 PR"、"发起合并请求"
 
-**何时使用**：
-
-| 场景 | 使用 |
-|------|------|
-| `/check` 或 `/qa` 通过后 | ✅ 必须 |
-| 功能开发完成，准备提交 | ✅ 推荐 |
-| 修复 bug 后提交 | ✅ 推荐 |
-| 代码还在开发中 | ❌ 不适用 |
-| 测试未通过 | ❌ 不适用 |
+**适用场景**：
+- 开发完成，准备提交代码
+- 需要推送到远程仓库
+- 需要创建 Pull Request
+- 希望自动处理 git 冲突
 
 ---
 
 ## 执行流程
 
 ```
-步骤 1: 状态检查
-    ↓
-步骤 2: 分析变更
-    ↓
-步骤 3: 生成 Commit Message（用户确认）
-    ↓
-步骤 4: 提交代码
-    ↓
-步骤 5: 推送远程
-    ↓
-步骤 6: 创建 PR（可选）
+1. 分析代码变更 → 生成提交信息
+2. 用户确认
+3. 提交 → 同步远程（自动合并冲突）→ 推送
 ```
 
-### 步骤 1: 状态检查
+---
 
-检查当前 git 状态，确保可以提交：
+## 实现细节（AI 参考）
 
-```bash
-# 检查是否在 git 仓库中
-git rev-parse --is-inside-work-tree
-
-# 查看当前分支
-git branch --show-current
-
-# 查看工作区状态
-git status
-
-# 查看是否有远程仓库
-git remote -v
-```
-
-**检查项**：
-- [ ] 当前在 git 仓库中
-- [ ] 有未提交的变更
-- [ ] 远程仓库已配置
-
-如果没有变更，提示用户并结束。
-
-### 步骤 2: 分析变更
-
-收集变更信息用于生成 commit message：
+### 步骤 1: 分析变更 + 生成提交信息
 
 ```bash
-# 查看未暂存的变更
-git diff
+# 检查 git 状态
+git rev-parse --is-inside-work-tree || { echo "❌ 当前目录不是代码仓库"; exit 1; }
+git status --short | grep -q . || { echo "ℹ️ 没有需要提交的代码"; exit 0; }
 
-# 查看已暂存的变更
-git diff --cached
+# 获取当前分支
+branch=$(git branch --show-current)
 
-# 查看变更的文件列表
+# 检查远程更新
+git fetch origin 2>&1
+
+# 分析变更
+git diff --stat
 git status --short
-
-# 查看最近的 commit 风格（用于参考）
-git log --oneline -5
+git log --oneline -3
 ```
 
-### 步骤 3: 生成 Commit Message
+**生成提交信息**：
 
-基于变更内容自动生成 commit message，**必须让用户确认或修改**。
-
-**Commit Message 格式**：
-
+基于变更内容生成，格式：
 ```
 <type>: <简短描述>
 
-<详细说明（可选）>
+<详细说明>
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: <从 git config 读取>
 ```
 
 **Type 类型**：
-| Type | 说明 |
-|------|------|
-| `feat` | 新功能 |
-| `fix` | Bug 修复 |
-| `docs` | 文档更新 |
-| `style` | 代码格式（不影响功能） |
-| `refactor` | 重构 |
-| `perf` | 性能优化 |
-| `test` | 测试相关 |
-| `chore` | 构建/工具/依赖 |
+- `feat`: 新功能
+- `fix`: Bug 修复
+- `docs`: 文档更新
+- `refactor`: 重构
+- `chore`: 其他
 
-**示例输出**：
+**动态获取作者**：
+```bash
+git_user_name=$(git config user.name 2>/dev/null || echo "Claude Sonnet 4.5")
+git_user_email=$(git config user.email 2>/dev/null || echo "noreply@anthropic.com")
+```
 
+**展示给用户**：
 ```markdown
-根据变更内容，建议的 commit message：
+我分析了你的代码变更，建议提交信息：
 
 ---
-feat: 添加用户登录功能
-
-- 实现登录 API 接口
-- 添加 JWT token 生成
-- 前端登录表单组件
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+<生成的提交信息>
 ---
 
-请确认或修改后回复：
-1. 确认提交
-2. 取消
-（或直接输入新内容修改后提交）
+确认提交？(y/n)
 ```
 
-**必须等待用户确认后才能继续！**
+### 步骤 2: 用户确认
 
-### 步骤 4: 提交代码
+- 输入 `y` 或 `确认`：继续
+- 输入 `n` 或 `取消`：停止
+- 输入其他内容：作为新的提交信息
 
-用户确认后执行提交：
+### 步骤 3: 提交 + 同步 + 推送
 
 ```bash
-# 暂存所有变更
+# 1. 暂存并提交
 git add -A
+git commit -m "<用户确认的提交信息>"
 
-# 提交（使用 HEREDOC 确保格式正确）
-git commit -m "$(cat <<'EOF'
-<用户确认的 commit message>
-EOF
-)"
-```
-
-### 步骤 5: 推送远程
-
-```bash
-# 获取当前分支名
+# 2. 同步远程（自动合并冲突）
 branch=$(git branch --show-current)
 
-# 检查是否有上游分支
-git rev-parse --abbrev-ref @{upstream} 2>/dev/null
+# 尝试 pull --rebase
+if git pull --rebase origin "$branch" 2>&1; then
+    echo "✅ 已同步远程代码"
+else
+    # 检测到冲突，自动合并
+    echo "⚙️ 检测到代码冲突，正在自动合并..."
 
-# 如果没有上游分支，设置并推送
-git push -u origin "$branch"
+    # 获取冲突文件
+    conflict_files=$(git diff --name-only --diff-filter=U)
 
-# 如果有上游分支，直接推送
-git push
+    if [ -z "$conflict_files" ]; then
+        echo "❌ 同步失败（非冲突原因）"
+        git rebase --abort
+        exit 1
+    fi
+
+    # 对每个冲突文件进行自动合并
+    merge_success=true
+    for file in $conflict_files; do
+        # 读取冲突内容
+        if grep -q "<<<<<<< HEAD" "$file"; then
+            # 尝试自动合并
+            if auto_merge_conflict "$file"; then
+                echo "   - $file：已自动合并"
+                git add "$file"
+            else
+                echo "   - $file：无法自动合并"
+                merge_success=false
+            fi
+        fi
+    done
+
+    if [ "$merge_success" = true ]; then
+        git rebase --continue
+        echo "✅ 自动合并成功"
+    else
+        echo "❌ 冲突较复杂，无法自动合并"
+        echo ""
+        echo "冲突文件："
+        echo "$conflict_files"
+        echo ""
+        echo "建议：请联系技术同事处理"
+        echo "如需回滚：git rebase --abort && git reset --soft HEAD~1"
+        exit 1
+    fi
+fi
+
+# 3. 推送到远程
+if git rev-parse --abbrev-ref @{upstream} >/dev/null 2>&1; then
+    git push
+else
+    git push -u origin "$branch"
+fi
 ```
 
-**推送前确认**：
-- 当前分支：`<branch_name>`
-- 远程仓库：`origin`
-- 是否继续推送？
+**自动合并策略**（AI 实现）：
 
-### 步骤 6: 创建 PR（可选）
+```python
+def auto_merge_conflict(file_path):
+    """
+    自动合并冲突文件
 
-推送成功后，询问用户是否创建 PR：
+    策略：
+    1. 不同行修改 → 保留双方修改
+    2. 同一行修改 → 保留远程版本（假设远程是最新的）
+    3. 文件删除冲突 → 保留本地版本
+    """
+    with open(file_path, 'r') as f:
+        content = f.read()
 
-```markdown
-代码已推送到远程仓库。
+    # 解析冲突标记
+    conflicts = parse_conflict_markers(content)
 
-是否创建 Pull Request？
-1. 是，创建 PR
-2. 否，稍后手动创建
+    merged_content = []
+    last_pos = 0
+
+    for conflict in conflicts:
+        # 添加冲突前的内容
+        merged_content.append(content[last_pos:conflict.start])
+
+        # 判断冲突类型
+        if is_different_lines(conflict.ours, conflict.theirs):
+            # 不同行修改，保留双方
+            merged_content.append(conflict.ours)
+            merged_content.append(conflict.theirs)
+        elif is_same_line_modification(conflict.ours, conflict.theirs):
+            # 同一行修改，保留远程（theirs）
+            merged_content.append(conflict.theirs)
+        else:
+            # 复杂冲突，无法自动处理
+            return False
+
+        last_pos = conflict.end
+
+    # 添加剩余内容
+    merged_content.append(content[last_pos:])
+
+    # 写回文件
+    with open(file_path, 'w') as f:
+        f.write(''.join(merged_content))
+
+    return True
 ```
 
-如果用户选择创建 PR：
+**错误处理（白话文）**：
 
-```bash
-# 使用 gh 创建 PR
-gh pr create --title "<commit 的简短描述>" --body "$(cat <<'EOF'
-## Summary
-<基于 commit message 生成的摘要>
-
-## Test plan
-- [ ] 单元测试通过
-- [ ] 功能测试通过
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
+| 技术错误 | 白话文翻译 |
+|---------|-----------|
+| `fatal: unable to access` | ❌ 推送失败：网络连接问题<br>建议：检查网络后重试 |
+| `Permission denied` | ❌ 推送失败：没有权限<br>建议：检查仓库访问权限 |
+| `rejected` | ❌ 推送失败：远程有新代码<br>建议：重新运行 /ship |
+| `not a git repository` | ❌ 当前目录不是代码仓库 |
 
 ---
 
-## 危险信号
+## 边界情况
 
-| 信号 | 处理 |
+| 情况 | 处理 |
 |------|------|
-| 有 `.env` 或敏感文件在变更中 | 立即警告，建议添加到 `.gitignore` |
-| 变更文件超过 50 个 | 提醒用户确认是否正确 |
-| 在 `main`/`master` 分支直接提交 | 警告，建议使用功能分支 |
-| 未配置远程仓库 | 提示配置后再执行 |
-| `git push --force` | 禁止，除非用户明确要求 |
-
----
-
-## 敏感文件检测
-
-提交前自动检测以下文件类型：
-
-```
-.env*
-*.pem
-*.key
-*credentials*
-*secret*
-config/local.*
-```
-
-如果检测到，输出警告：
-
-```markdown
-⚠️ 检测到可能的敏感文件：
-
-- .env.local
-- config/credentials.json
-
-这些文件包含敏感信息，不应提交到仓库。
-
-建议操作：
-1. 添加到 .gitignore
-2. 从暂存区移除：git reset <file>
-
-是否继续？
-1. 继续（强制提交）
-2. 取消
-```
-
----
-
-## 常见借口（都是错的）
-
-| 借口 | 现实 |
-|------|------|
-| "我确定没有敏感信息" | 自动检测比人工可靠 |
-| "这是私有仓库不要紧" | 私有仓库也可能泄露 |
-| "先提交再说" | 提交后再删除，历史中仍然存在 |
-
----
-
-## 与其他 Skills 的关系
-
-```
-/run-plan（执行计划）
-    ↓
-/check（开发检查）
-    ↓
-/qa（测试验收）
-    ↓
-/ship（代码交付）← 本技能
-    ↓
-完成
-```
+| 无代码变更 | 提示"没有需要提交的代码" |
+| 不是 git 仓库 | 提示"当前目录不是代码仓库" |
+| 在 main/master 分支 | 警告"你在主分支上提交，确认吗？" |
+| 无远程跟踪分支 | 自动推送到 origin/当前分支名 |
+| git config 未配置 | 使用默认值 "Claude Sonnet 4.5" |
 
 ---
 
 ## 完整示例
 
+**正常流程**：
 ```
 用户：/ship
 
-Claude：让我检查当前的 git 状态...
-
-📊 当前状态：
-- 分支：feature/user-auth
-- 变更文件：8 个
-- 新增：3 个
-- 修改：5 个
-
-📝 变更内容分析：
-- backend/app/api/auth.py（新增）
-- backend/app/services/auth_service.py（新增）
-- frontend/src/pages/Login.tsx（新增）
-- backend/app/models/user.py（修改）
-- ...
+Claude：我分析了你的代码变更，建议提交信息：
 
 ---
-建议的 commit message：
+feat: 添加用户登录功能
 
-feat: 实现用户认证功能
+- 实现登录 API
+- 添加登录页面
 
-- 添加登录/注册 API
-- 实现 JWT token 认证
-- 前端登录页面
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: 李杰 <lijie@example.com>
 ---
 
-请确认或修改：
-1. 确认提交
-2. 取消
-（或直接输入新内容修改后提交）
+确认提交？(y/n)
 
-用户：1
+用户：y
 
-Claude：✅ 代码已提交
-
-正在推送到远程仓库...
-- 分支：feature/user-auth
-- 远程：origin
-
+Claude：
+✅ 代码已提交
+✅ 已同步远程代码
 ✅ 推送成功
 
-是否创建 Pull Request？
-1. 是
-2. 否
-
-用户：是
-
-Claude：正在创建 PR...
-
-✅ PR 已创建：https://github.com/xxx/xxx/pull/123
+📋 提交信息：feat: 添加用户登录功能
+🔗 远程分支：origin/feature/user-auth
 
 🎉 代码交付完成！
 ```
 
----
+**冲突自动合并**：
+```
+用户：/ship
 
-## 完成检查清单
+Claude：[... 确认提交信息 ...]
 
-- [ ] 当前在 git 仓库中
-- [ ] 有变更需要提交
-- [ ] 无敏感文件（或已确认）
-- [ ] Commit message 已用户确认
-- [ ] 代码已提交
-- [ ] 已推送到远程
-- [ ] PR 已创建（如需要）
+用户：y
+
+Claude：
+✅ 代码已提交
+⚙️ 检测到代码冲突，正在自动合并...
+   - src/app.py：已自动合并
+   - src/utils.py：已自动合并
+✅ 自动合并成功
+✅ 推送成功
+
+🎉 代码交付完成！
+```
+
+**复杂冲突**：
+```
+用户：/ship
+
+Claude：[... 确认提交信息 ...]
+
+用户：y
+
+Claude：
+✅ 代码已提交
+⚙️ 检测到代码冲突，正在自动合并...
+   - src/core.py：无法自动合并
+❌ 冲突较复杂，无法自动合并
+
+冲突文件：
+- src/core.py
+
+建议：请联系技术同事处理
+如需回滚：git rebase --abort && git reset --soft HEAD~1
+```
 
 ---
 
 ## ✅ 完成提示
 
-当代码交付完成后，输出：
-
 ```
 ✅ 代码交付完成
 
-📋 提交信息：<commit message 简短描述>
+📋 提交信息：<简短描述>
 🔗 远程分支：origin/<branch>
-🔗 PR 地址：<pr_url>（如已创建）
 
-🎉 本次开发任务完成！
+🎉 完成！
 ```
