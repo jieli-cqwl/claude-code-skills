@@ -57,7 +57,7 @@
 | **一键开发** | `/auto-dev` | 智能判断规模，自动选择流程 |
 | **需求阶段自动化** | `/req-loop` | clarify + 外部评审，输出经审 AC 文档 |
 | **设计阶段自动化** | `/design-loop` | explore + design + 双重评审 + 自动修复 |
-| **开发阶段自动化** | `/dev-loop` | run-plan + check + gemini-review + 自动修复 |
+| **开发阶段自动化** | `/dev-loop` | run-plan + check + 自动修复 |
 | 小改动 | 直接开发 → `/check` → `/ship` | 不需要走流程 |
 | 调试问题 | `/debug` → 修复 → `/check` → `/ship` | 专注问题解决 |
 
@@ -80,7 +80,7 @@
 | 重构 Python | `/refactor-py` | Python/FastAPI 过度设计：ABC 滥用、装饰器嵌套 |
 | 写实施计划 | `/plan` | 支持**多人协作模式** + **验收测试场景**（Given-When-Then） |
 | **执行计划** | `/run-plan` | **多人协作执行**，Alice/Bob/Charlie 并行开发 |
-| **开发循环** | `/dev-loop` | 自动执行 run-plan → check → gemini-review，失败自动修复重试 |
+| **开发循环** | `/dev-loop` | 自动执行 run-plan → check，失败自动修复重试 |
 | **开发检查** | `/check` | 6 Agent 并行检查，含**服务启动验证** |
 | **测试验收** | `/qa` | 基于 /plan 验收场景执行，金字塔门控（单元→集成→E2E） |
 | 调试问题 | `/debug` | 四阶段根因分析 |
@@ -397,7 +397,7 @@
 
 **用途**：执行详细计划，**支持多人协作模式，效率提升 2-5 倍**
 
-> 💡 **提示**：如需自动化完整开发阶段（run-plan → check → gemini-review + 自动修复），使用 `/dev-loop`
+> 💡 **提示**：如需自动化完整开发阶段（run-plan → check + 自动修复），使用 `/dev-loop`
 
 **版本**：v3.0（多人协作模式，2025-01-28）
 
@@ -426,28 +426,25 @@ Tech Lead 后置工作（集成 + 服务启动验证）
 
 **触发**：`/dev-loop`
 
-**用途**：自动化开发阶段，执行 run-plan → check → gemini-review 完整循环
+**用途**：自动化开发阶段，执行 run-plan → check 完整循环
 
 **版本**：v1.0（2026-02-04）
 
 **核心机制**：
 - **状态机驱动**：9 种状态，明确的转换规则
-- **分层自动修复**：L1 Lint → L2 类型 → L3 测试 → L4 评审
+- **分层自动修复**：L1 Lint → L2 类型 → L3 测试
 - **检查点恢复**：中断后可从上次状态恢复
-- **最大重试 3 次**：check 和 gemini-review 共享计数
+- **最大重试 3 次**：check 失败重试计数
 
 **执行流程**：
 ```
-门控检查（plan 存在？gemini 可用？）
+门控检查（plan 存在？）
     ↓
 /run-plan
     ↓
 /check ←─┐
     │    │ 失败：自动修复（最多 3 次）
     ↓    │
-/gemini-review
-    │
-    ↓
 成功报告 / 失败报告
 ```
 
