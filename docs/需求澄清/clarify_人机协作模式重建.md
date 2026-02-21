@@ -115,7 +115,7 @@
 
 | 条目 | 原因 |
 |------|------|
-| 不额外增加独立评审层（如 /critique、/gemini-critique） | Pipeline 内 Checker/QA 角色张力已提供质量对抗，额外评审层边际价值低，且增加流程复杂度 |
+| 不额外增加独立评审层（如 /critique、/gemini-critique） | Pipeline 内 Checker/QA 角色张力已提供质量对抗，额外评审层边际价值低。注：Design-Plan / Plan-Implement 的评审循环不属于此排除项——它们是**结构化 checklist 校验**（检查覆盖率、格式、可执行性），不是独立的质量评审层 |
 | 不追求实时介入每个环节 | 与"只介入首尾"的目标矛盾 |
 | 不考虑 Claude Code CLI 以外的平台方案 | 本次调研范围限定 |
 
