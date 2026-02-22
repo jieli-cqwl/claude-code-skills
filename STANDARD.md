@@ -46,9 +46,9 @@
 
 | 规模 | 推荐流程 | 跳过环节 |
 |------|---------|---------|
-| **小** | clarify → plan → run-plan → check → ship | explore、design、critique |
-| **中** | clarify → design → plan → run-plan → check → qa → ship | explore、critique（可选） |
-| **大** | clarify → explore → design → plan → run-plan → check → qa → ship | critique（可选） |
+| **小** | clarify → plan → run-plan → check → ship | design |
+| **中** | clarify → design → plan → run-plan → check → qa → ship | — |
+| **大** | clarify → design → plan → run-plan → check → qa → ship | — |
 
 ### 快速入口
 
@@ -56,10 +56,11 @@
 |------|------|------|
 | **一键开发** | `/auto-dev` | 智能判断规模，自动选择流程 |
 | **需求阶段自动化** | `/req-loop` | clarify + 外部评审，输出经审 AC 文档 |
-| **设计阶段自动化** | `/design-loop` | explore + design + 双重评审 + 自动修复 |
+| **设计阶段自动化** | `/design-loop` | design + 双重评审 + 自动修复 |
 | **开发阶段自动化** | `/dev-loop` | run-plan + check + 自动修复 |
 | 小改动 | 直接开发 → `/check` → `/ship` | 不需要走流程 |
-| 调试问题 | `/debug` → 修复 → `/check` → `/ship` | 专注问题解决 |
+| 修复问题 | `/fix` | 修复 check/qa 发现的问题（调用 pipeline-fixer） |
+| 查看进度 | `/status` | 查看当前 Pipeline 运行进度 |
 
 ---
 
@@ -69,10 +70,10 @@
 |-------------|------|------|
 | **🚀 自动开发** | `/auto-dev` | 需求→成品全自动，**多人协作 + 严格 TDD**，效率提升 2-5 倍 |
 | **项目概览** | `/overview` | 接手新项目时快速理解全貌（产品视角+架构图） |
-| **需求循环** | `/req-loop` | clarify → gemini-critique，评审有问题时提示用户补充 |
+| **需求循环** | `/req-loop` | clarify → 评审，评审有问题时提示用户补充 |
 | **设计循环** | `/design-loop` | explore → design → 双重评审，失败自动修复（最多 2 次） |
 | 需求澄清 | `/clarify` | 上下文感知的精准澄清，先研究项目再提问 |
-| 方案探索 | `/explore` | 调研业界最佳实践（至少5个来源） |
+| 方案探索 | `/design`（已内含多方案对比） | Designer 已包含多方案对比，无需单独 explore |
 | **架构设计** | `/design` | 模块划分、接口契约、数据模型 |
 | 产品设计 | `/product` | 心理学视角的 PRD/交互设计 |
 | **代码重构** | `/refactor` | 通用入口，自动识别语言并应用对应规则 |
@@ -83,7 +84,7 @@
 | **开发循环** | `/dev-loop` | 自动执行 run-plan → check，失败自动修复重试 |
 | **开发检查** | `/check` | 6 Agent 并行检查，含**服务启动验证** |
 | **测试验收** | `/qa` | 基于 /plan 验收场景执行，金字塔门控（单元→集成→E2E） |
-| 调试问题 | `/debug` | 四阶段根因分析 |
+| 修复/调试 | `/fix` | 修复 check/qa 问题（已合并 debug 功能） |
 | 并行调查 | `/parallel` | 多 agent 并行处理 |
 | Agent 编排 | `/experts` | 多专家协调 |
 | 隔离开发 | `/worktree` | Git Worktree 管理 |
@@ -93,8 +94,9 @@
 | H5 移动端 | `/h5` | 移动端交互体验优化 |
 | **安全扫描** | `/security` | 专业工具扫描 OWASP Top 10 漏洞 |
 | **性能分析** | `/perf` | 定位热点函数和 N+1 查询 |
-| **测试生成** | `/test-gen` | 生成 FAILING 测试，支持从验收场景生成（AC 模式） |
 | 代码扫描 | `/scan` | 代码质量扫描（技术债） |
+| **修复问题** | `/fix` | 修复 check/qa 发现的 FAIL 项（调用 pipeline-fixer SubAgent） |
+| **Pipeline 进度** | `/status` | 查看当前 Pipeline 运行阶段和进度 |
 | **代码交付** | `/ship` | 提交、推送、创建 PR 一键完成 |
 
 ---
@@ -115,25 +117,22 @@
     │   → /design → /plan → /run-plan → /check → /qa → /ship
     │
     └─ 大需求（AC > 8）
-        → /explore → /design → /plan → /run-plan → /check → /qa → /ship
+        → /design → /plan → /run-plan → /check → /qa → /ship
 ```
 
 **关键变化（v3.2）**：
-- `/explore`、`/design`：根据需求规模**按需调用**，不再强制
-- `/critique`：从"自动触发"改为**可选**，默认跳过
+- `/design`：根据需求规模**按需调用**，不再强制
 - `/auto-dev`：智能判断规模，自动选择流程
 
 **核心改进（v3.2）**：
 - **智能流程选择**：根据需求规模自动决定走哪些环节
-- `/explore`、`/design`：按需调用，小需求跳过
-- `/critique`：从"自动触发"改为"可选"，默认跳过，守门而非扩展
+- `/design`：按需调用，小需求跳过
 - `/auto-dev`：智能判断规模，自动选择流程
 
 **可选分支**：
 - `/product`：涉及用户体验时，在 `/clarify` 之后使用
-- `/refactor`：代码重构时，替代 `/explore` → `/design` → `/plan` 流程
+- `/refactor`：代码重构时，替代 `/design` → `/plan` 流程
 - **`/auto-dev`**：自动循环开发，融合多人协作 + 严格 TDD + 智能流程选择
-- `/critique`：大需求或安全敏感时，可通过 `--with-critique` 启用
 
 ### 🚀 自动开发流程（往死里干模式）
 
@@ -141,7 +140,7 @@
 /clarify（需求澄清）← 手动，确认需求
     ↓
 /auto-dev（自动循环开发 v2.0）← 全自动，可过夜运行
-    ├─ 内含: /explore → /design → /plan v3.0
+    ├─ 内含: /design → /plan v3.0
     ├─ 内含: 多人协作执行（Alice/Bob/Charlie 并行）
     ├─ 内含: 严格 TDD + 完成前验证
     ├─ 内含: 服务启动验证
@@ -255,28 +254,7 @@
 
 ---
 
-### 2. explore（方案探索）
-
-**触发**：`/explore`
-
-**用途**：调研业界最佳实践，选择最优方案
-
-**核心原则**：
-- **至少调研 5 个来源**（GitHub、官方文档、技术博客等）
-- 提供 2-3 个可行方案对比
-- 分段验证，每段确认后再继续
-- 遵循 YAGNI 原则
-
-**输出**：调研对比表 + 推荐方案
-
-**不做的事情**（交给 `/design`）：
-- 模块划分
-- 接口设计
-- 数据模型设计
-
----
-
-### 3. design（架构设计）
+### 2. design（架构设计）
 
 **触发**：`/design`
 
