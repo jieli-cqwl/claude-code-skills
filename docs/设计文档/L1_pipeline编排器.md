@@ -161,7 +161,19 @@ Handoff 结构化验证（最低限度格式检查，非质量保证）。
 
 ### 4.12 run_tests() / parse_result()
 
-pipeline.sh 独立运行测试判定 PASS/FAIL。自动检测项目测试框架（pytest / npm test），退出码 0 = PASS，非 0 = FAIL。
+pipeline.sh 独立运行测试判定 PASS/FAIL。退出码 0 = PASS，非 0 = FAIL。
+
+**测试命令获取策略**（双层）：
+1. **主路径**：从 Implementer 的 Handoff（handoff_run.md）中提取 `TEST_CMD: xxx`，直接执行
+2. **Fallback**：若 Handoff 中无 TEST_CMD，按框架检测优先级自动匹配：
+   1. `pytest.ini` / `pyproject.toml [tool.pytest]` / `setup.cfg [tool:pytest]` -> `pytest`
+   2. `package.json` scripts.test -> `npm test`
+   3. `go.mod` -> `go test ./...`
+   4. `Cargo.toml` -> `cargo test`
+   5. `pom.xml` -> `mvn test` / `build.gradle` -> `gradle test`
+   6. 以上均无 -> exit 1（无法检测测试框架，不默认 PASS）
+
+**设计理由**：复杂项目（monorepo、自定义测试路径）的自动检测易误判。Implementer 最了解项目测试命令，显式传递比推断更可靠。Fallback 保留是为了兼容简单项目和历史 Handoff。
 
 **核心原则**：判定权在编排器，不在 SubAgent。杜绝"自证清白"的虚假完成。
 
@@ -268,7 +280,6 @@ build_prompt() {
 | Fix 历史注入 + 升级策略 | >= 3 次注入前几次失败记录；>= 5 次暂停人工介入 |
 | 进度文件按 feature 隔离 | 多个 Pipeline 并行时互不覆盖 |
 | 自动模式权限按角色分级 | Designer/Planner 用 plan，其余用 bypassPermissions，事后 git diff 校验 |
-| Check/QA PASS/FAIL 判定 | pipeline.sh 独立运行测试，退出码 0 = PASS，非 0 = FAIL。SubAgent 无权判定，只负责描述问题 |
 | Implement-Check 循环上限 3 轮 | Check 阶段问题是代码层面的，修复收敛快；3 轮已足够 |
 | 每步独立 `claude -p` | 独立上下文窗口，步骤间通过 Handoff 文件传递信息 |
 | `$CLI_CMD` 环境变量 | 一行配置切换 claude/claude-codex/claude-gemini，无缝支持多 backend |
@@ -282,7 +293,7 @@ build_prompt() {
 | 进度文件原子写入 | 先写临时文件（`.tmp.$$`）再 `mv`，防止读取方读到半写入的 JSON |
 | Handoff 最小结构校验 | 检查输出文件非空且包含关键标题，拦截空文件或格式严重偏离的输出 |
 | jq 依赖检查 | Status Line 依赖 jq 解析 JSON，启动前检查，未安装则阻断启动 |
-| 进度文件按 feature 隔离 | `.pipeline-progress-{feature}.json`，多个 Pipeline 并行时互不覆盖 |
+| jq 依赖前置检查 | Status Line 依赖 jq 解析 JSON，启动前检查未安装则阻断 |
 
 ---
 

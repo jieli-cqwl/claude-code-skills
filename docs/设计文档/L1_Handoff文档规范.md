@@ -63,7 +63,7 @@
 | Design -> Plan | 接口清单、模块依赖图、技术风险点、设计约束 |
 | Plan -> Implement（评审） | 评审反馈文件路径（review_plan_N.md） |
 | Plan -> Implement | 任务执行顺序、文件改动清单、每任务 AC、测试策略 |
-| Implement -> Check | commit 列表（含 hash）、测试运行结果摘要、已知遗留问题、BLOCKED 任务 |
+| Implement -> Check | commit 列表（含 hash）、测试运行结果摘要、`TEST_CMD`（项目测试执行命令）、已知遗留问题、BLOCKED 任务 |
 | Check -> QA | QA 不直接读取 Check 输出（保证独立性） |
 | QA -> Fix | FAIL 项清单（期望行为 + 实际行为 + 复现命令） |
 | Fix -> Check | 修复内容摘要、回归测试清单、修复前后测试 diff |

@@ -90,7 +90,7 @@ Handoff "下一步需要关注的点"替换为**固定传递项清单**：
 
 ### 原则 6：SOP 化 Prompt (CoT + Self-Correction)
 
-1. **强制思维链**：输出最终 Markdown 前先输出 `<thinking>` 标签（Decompose -> Analyze -> Synthesize -> Reflect）
+1. **强制思维链**：利用 Claude 的 extended thinking 能力（自动激活），确保输出前经过 Decompose -> Analyze -> Synthesize -> Reflect 四阶段推理
 2. **自我修正检查清单**：Prompt 最末尾加入强制检查项，不通过则自我修正
 
 ### 原则 7：早期熔断 (Fail Fast)
@@ -405,6 +405,7 @@ Planner 还承担 Design 文档评审。评审标准（DESIGN_OK vs DESIGN_ISSUE
 - 测试先行：pytest -> 3 FAILED
 - 实现：添加 username 字段 + validate_username
 - 验证：pytest -> 3 PASSED
+- TEST_CMD: pytest tests/
 - Commit: feat(Task-1): 添加用户数据模型及校验
 
 坏的执行输出：已完成用户模型开发，测试通过。
@@ -430,6 +431,7 @@ Planner 还承担 Design 文档评审。评审标准（DESIGN_OK vs DESIGN_ISSUE
 4. 是否有标记 BLOCKED 但未说明原因的任务？
 5. 实现是否偏离了 design 文档的接口定义？（逐接口核对）
 6. 如果有任何遗留问题，是否已在 Handoff 中明确标注？
+7. 是否在 Handoff 交接项中明确写出了 `TEST_CMD`（如 `pytest tests/` 或 `npm test`）？
 
 ### 评审上游：Plan 审查
 
