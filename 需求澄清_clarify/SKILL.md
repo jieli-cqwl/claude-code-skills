@@ -2,7 +2,7 @@
 name: clarify
 command: clarify
 user_invocable: true
-description: 需求澄清。基于项目上下文的精准提问，结合苏格拉底五类提问和 Example Mapping 暴露隐含假设，确保双方对需求无歧义。在方案探索（/explore）之前使用。
+description: 需求澄清。基于项目上下文的精准提问，结合苏格拉底五类提问和 Example Mapping 暴露隐含假设，确保双方对需求无歧义。在架构设计（/design）之前使用。
 ---
 
 # 需求澄清 (Clarify)
@@ -10,7 +10,7 @@ description: 需求澄清。基于项目上下文的精准提问，结合苏格�
 > **角色**：苏格拉底式需求对齐者（通过提问和具体示例暴露隐含假设，确保双方理解一致）
 > **核心方法**：苏格拉底五类提问 + Example Mapping 验证
 > **目标**：确保 Claude Code 和用户对"做什么"的理解完全一致，方向和范围无歧义
-> **下一步**：澄清完成后进入方案探索 (`/explore`)，简单需求可跳过直接 `/design`
+> **下一步**：澄清完成后进入架构设计 (`/design`)
 
 ---
 
@@ -37,10 +37,9 @@ description: 需求澄清。基于项目上下文的精准提问，结合苏格�
 - 输出格式必须符合 Handoff 通用规范（输入分析 / 决策及理由 / 核心产出 / 交接项）
 
 **下游依赖**：
-- `/explore` 依赖此文档
 - `/design` 依赖此文档
 - `/plan` 依赖此文档
-- `/test-gen` 依赖此文档
+- `/run-plan`（Implementer TDD）依赖此文档
 - `/qa` 依赖此文档
 
 ---
@@ -513,7 +512,7 @@ description: 需求澄清。基于项目上下文的精准提问，结合苏格�
 - 反例总数: X 个
 - 复杂度: [中等/复杂]
 - 文档指纹: DOC-HASH-XXXXXXXX
-- 单一来源声明: 此文档是整个开发流程的唯一验收标准，后续 /plan、/test-gen、/qa 必须引用，禁止重新定义
+- 单一来源声明: 此文档是整个开发流程的唯一验收标准，后续 /plan、/run-plan、/qa 必须引用，禁止重新定义
 
 ## 修改的文件
 - 无（clarify 阶段不修改项目代码）
@@ -580,19 +579,13 @@ description: 需求澄清。基于项目上下文的精准提问，结合苏格�
 /clarify（需求澄清）<- 当前，规则与示例单一来源
     | 输出：handoff_clarify.md（Rules + Examples，不含技术方案）
     v
-/explore（方案探索）
-    | 方案确定后
-    v
-/design（架构设计）<- 技术方案在这里输出
+/design（架构设计）<- 技术方案在这里输出（含多方案对比）
     v
 /plan（写计划）
     | 引用 /clarify 的规则与示例，禁止重新定义
     v
-/test-gen from-clarify  <- 测试先行
-    | 从规则与示例生成 FAILING 测试
-    v
 /run-plan（执行计划）
-    | 严格 TDD，基于已有测试开发
+    | 严格 TDD，从规则与示例生成测试并基于测试开发
     v
 /check（开发检查）
     v
@@ -607,9 +600,7 @@ description: 需求澄清。基于项目上下文的精准提问，结合苏格�
     |
 /plan 引用规则（禁止重新定义）
     |
-/test-gen 从规则和示例生成测试
-    |
-/run-plan 基于测试开发（TDD）
+/run-plan 严格 TDD（从规则生成测试 + 基于测试开发）
     |
 /qa 基于规则和示例验收
 ```
@@ -684,7 +675,7 @@ Handoff 文档已保存至：docs/pipeline/{feature_name}/handoff_clarify.md
 
 下一步：
 - 启动自动流程：~/.claude/pipeline.sh "{feature_name}" {project_dir}
-- 或手动执行：/explore（方案探索）或 /design（架构设计，简单需求可跳过 explore）
+- 或手动执行：/design（架构设计）
 ```
 
 ### 中等/复杂需求完成提示
@@ -699,14 +690,13 @@ Handoff 文档已保存至：docs/pipeline/{feature_name}/handoff_clarify.md
 
 单一来源声明：
    此文档是整个开发流程的唯一验收标准
-   后续 /plan、/test-gen、/qa 必须引用，禁止重新定义
+   后续 /plan、/run-plan、/qa 必须引用，禁止重新定义
    文档指纹将在 /plan 阶段自动验证，防止被意外修改
 
 下一步：
 - 启动自动流程：~/.claude/pipeline.sh "{feature_name}" {project_dir}
 - 或手动执行下一步：
-  1. /explore（方案探索）- 调研业界最佳实践
-  2. /design（架构设计）- 输出技术方案
+  1. /design（架构设计）- 含多方案对比，输出技术方案
 
 现在启动自动流程还是手动执行下一步？
 ```

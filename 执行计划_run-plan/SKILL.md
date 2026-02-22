@@ -10,7 +10,7 @@ agent: pipeline-implementer
 计划执行入口。SubAgent pipeline-implementer 将在隔离上下文中执行：
 1. 读取 docs/pipeline/{feature}/handoff_plan.md
 2. 按 Task 拓扑顺序执行开发（严格 TDD，支持并行派发）
-3. 输出到 docs/pipeline/{feature}/handoff_impl.md
+3. 输出到 docs/pipeline/{feature}/handoff_run.md
 
 > 如 handoff_plan.md 不存在，请先执行 /plan。
 
