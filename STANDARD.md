@@ -1,17 +1,17 @@
 # Skills 标准索引
 
 > 所有可用的 Skills 列表，按工作流程阶段组织
-> **版本**：v3.3（清理已删除 Skills，2026-02-22）
+> **版本**：v4.0（Skills 与 SubAgents 优化改造，2026-02-23）
 
 ## 核心理念
 
 | 理念 | 说明 |
 |------|------|
 | **简单、合适、演化** | 不过度设计，根据需求规模选择合适的流程 |
-| **多人协作** | 按功能拆分，Alice/Bob/Charlie 并行开发，效率提升 **2-5 倍** |
+| **三种使用方式** | 主对话直接用 Skill、触发 SubAgent 隔离执行、全流程自动编排 |
+| **三层架构** | 编排层（Skill/pipeline.sh）+ 执行层（SubAgent 角色卡）+ 知识层（知识型 Skill） |
 | **严格 TDD** | 没有先失败的测试，就没有生产代码 |
 | **完成前验证** | 只有亲眼看到验证命令成功，才能声称完成 |
-| **服务启动验证** | 必须亲眼看到服务正常启动并响应请求 |
 
 ## 规范文件说明
 
@@ -27,6 +27,33 @@
 | TDD 规范 | `~/.claude/reference/TDD规范.md` | 严格的测试驱动开发 |
 | 完成前验证 | `~/.claude/reference/完成前验证.md` | 声明完成前的验证清单 |
 | 并行拆分策略 | `~/.claude/reference/并行拆分策略.md` | 多人协作模式的拆分原则 |
+
+---
+
+## 三种使用方式
+
+### 方式 1：主对话直接使用 Skill
+
+不需要上下文隔离时，直接在主对话中使用 Skill。
+
+适用 Skill：`/clarify`, `/ship`, `/refactor`, `/overview`, `/status`, `/security`, `/perf`, `/scan`, `/worktree`, `/mcp-builder`, `/admin-ui`, `/h5`, `/product`
+
+### 方式 2：触发 SubAgent 隔离执行
+
+需要上下文隔离（避免噪音污染主对话）时，通过入口 Skill 触发 SubAgent。
+
+适用 Skill：`/design`, `/plan`, `/run-plan`, `/check`, `/qa`, `/fix`
+
+机制：入口 Skill 的 `context: fork` + `agent: pipeline-xxx` → Claude Code 原生创建隔离上下文 → 自动加载 SubAgent 及其 skills
+
+### 方式 3：全流程自动编排
+
+需要连续执行多个隔离阶段时，使用编排 Skill。
+
+| 命令 | 场景 | 特点 |
+|------|------|------|
+| `/auto-dev` | 日常开发 | 在主对话中编排，有人工确认检查点 |
+| `pipeline.sh` | 无人值守 | 独立终端，超时/费用/锁等加固 |
 
 ---
 
@@ -54,7 +81,8 @@
 
 | 场景 | 命令 | 说明 |
 |------|------|------|
-| **Pipeline 自动化** | `~/.claude/pipeline.sh "<feature>"` | 全流程自动编排（design→plan→impl→check→qa） |
+| **全流程自动编排** | `/auto-dev` | 在主对话中依次编排 design->plan->impl->check->qa，含人工确认检查点 |
+| **无人值守全自动** | `~/.claude/pipeline.sh "<feature>"` | 独立终端运行，含超时/费用/锁等加固机制（CI/CD 场景） |
 | 小改动 | 直接开发 → `/check` → `/ship` | 不需要走流程 |
 | 修复问题 | `/fix` | 修复 check/qa 发现的问题（调用 pipeline-fixer） |
 | 查看进度 | `/status` | 查看当前 Pipeline 运行进度 |
@@ -67,14 +95,13 @@
 |-------------|------|------|
 | **项目概览** | `/overview` | 接手新项目时快速理解全貌（产品视角+架构图） |
 | 需求澄清 | `/clarify` | 上下文感知的精准澄清，先研究项目再提问 |
-| 方案探索 | `/design`（已内含多方案对比） | Designer 已包含多方案对比，无需单独 explore |
-| **架构设计** | `/design` | 模块划分、接口契约、数据模型 |
+| **架构设计** | `/design` | 隔离上下文，模块划分、接口契约、数据模型 |
 | 产品设计 | `/product` | 心理学视角的 PRD/交互设计 |
 | **代码重构** | `/refactor` | 通用入口，自动识别语言并应用对应规则 |
-| 写实施计划 | `/plan` | 支持**多人协作模式** + **验收测试场景**（Given-When-Then） |
-| **执行计划** | `/run-plan` | **多人协作执行**，Alice/Bob/Charlie 并行开发 |
-| **开发检查** | `/check` | 6 Agent 并行检查，含**服务启动验证** |
-| **测试验收** | `/qa` | 基于 /plan 验收场景执行，金字塔门控（单元→集成→E2E） |
+| 写实施计划 | `/plan` | 隔离上下文，拆分可执行任务 + Design 评审 |
+| **执行计划** | `/run-plan` | 隔离上下文，严格 TDD 执行 + Plan 评审 |
+| **开发检查** | `/check` | 隔离上下文，五维代码质量检查（对抗性审查） |
+| **测试验收** | `/qa` | 隔离上下文，端到端功能验收（黑盒视角） |
 | 修复/调试 | `/fix` | 修复 check/qa 问题（已合并 debug 功能） |
 | 隔离开发 | `/worktree` | Git Worktree 管理 |
 | MCP 开发 | `/mcp-builder` | MCP 服务器开发指南 |
@@ -84,6 +111,7 @@
 | **性能分析** | `/perf` | 定位热点函数和 N+1 查询 |
 | 代码扫描 | `/scan` | 代码质量扫描（技术债） |
 | **修复问题** | `/fix` | 修复 check/qa 发现的 FAIL 项（调用 pipeline-fixer SubAgent） |
+| **全流程编排** | `/auto-dev` | 主对话中编排完整开发流程（含人工确认检查点） |
 | **Pipeline 进度** | `/status` | 查看当前 Pipeline 运行阶段和进度 |
 | **代码交付** | `/ship` | 提交、推送、创建 PR 一键完成 |
 
@@ -110,7 +138,7 @@
 
 **关键说明**：
 - `/design`：根据需求规模**按需调用**，小需求可跳过
-- Pipeline 自动化：`~/.claude/pipeline.sh` 可自动编排全流程
+- 全流程编排：`/auto-dev` 在主对话中编排（含人工确认），`pipeline.sh` 在独立终端无人值守运行
 
 **可选分支**：
 - `/product`：涉及用户体验时，在 `/clarify` 之后使用
@@ -178,16 +206,15 @@
 
 **触发**：`/design`
 
-**用途**：将技术方案转化为可落地的系统蓝图
+**用途**：在隔离上下文中启动 pipeline-designer SubAgent 执行架构设计
+
+**机制**：`context: fork` + `agent: pipeline-designer` → 自动加载 `pipeline-architecture` 知识
 
 **核心产出**：
-- 模块划分（边界、职责、依赖）
-- 接口设计（API 路径、参数、响应、错误码）
-- 数据模型（表结构、索引、关联关系）
+- handoff_design.md（模块划分、接口设计、数据模型）
+- Key_Decisions.md（关键架构决策记录）
 
-**前置条件**：有 `/clarify` 的输出（需求文档）
-
-**输出**：架构设计文档 → `docs/设计文档/设计_[主题].md`
+**前置条件**：有 `/clarify` 的输出
 
 ---
 
@@ -205,29 +232,19 @@
 
 ---
 
-### 4. plan（写计划 v3.0）
+### 4. plan（写计划）
 
 **触发**：`/plan`
 
-**用途**：将架构蓝图转化为可执行的步骤清单，**支持多人协作模式**
+**用途**：在隔离上下文中启动 pipeline-planner SubAgent，将架构蓝图拆分为可执行任务
 
-**版本**：v3.0（多人协作模式，2025-01-28）
+**机制**：`context: fork` + `agent: pipeline-planner` → 自动加载 `pipeline-architecture` + `pipeline-review-standard` 知识
 
-**核心改进**：
-- **多人协作模式**：按功能拆分，分派开发者（Alice/Bob/Charlie）
-- **文件范围指定**：每个开发者明确负责的文件，避免冲突
-- **Tech Lead 工作**：基础设施（前置）+ 集成验证（后置）
+**双职责**：
+1. 评审 Design 文档 → 输出 DESIGN_OK / DESIGN_ISSUE
+2. 制定开发计划 → 输出 handoff_plan.md
 
-**拆分模式选择**：
-
-| 模式 | 适用场景 | 效率提升 |
-|------|---------|---------|
-| 多人协作模式 | 功能独立、文件不冲突 | **2-5 倍** |
-| 依赖链模式 | 强耦合、必须串行 | 40-60% |
-
-**前置条件**：有 `/design` 的输出（架构设计）
-
-**输出**：计划文档 → `docs/开发文档/plan_[功能名].md`
+**前置条件**：有 `/design` 的输出
 
 ---
 
@@ -253,56 +270,36 @@
 
 ---
 
-### 6. run-plan（执行计划 v3.0）
+### 6. run-plan（执行计划）
 
 **触发**：`/run-plan`
 
-**用途**：执行详细计划，**支持多人协作模式，效率提升 2-5 倍**
+**用途**：在隔离上下文中启动 pipeline-implementer SubAgent，严格 TDD 执行开发
 
-**版本**：v3.0（多人协作模式，2025-01-28）
+**机制**：`context: fork` + `agent: pipeline-implementer` → 自动加载 `pipeline-tdd-methodology` + `pipeline-code-quality` 知识
 
-**核心改进**：
-- **多人协作模式**：Alice/Bob/Charlie 并行开发独立功能
-- **角色设定**：Tech Lead（基础设施+集成）+ 开发者（独立功能）
-- **文件边界约束**：每个开发者只修改分配的文件
-- **严格 TDD**：引用 `~/.claude/reference/TDD规范.md`
-- **完成前验证**：引用 `~/.claude/reference/完成前验证.md`
-- **服务启动验证**：Tech Lead 后置工作必须验证
+**双职责**：
+1. 评审 Plan 文档 → 输出 PLAN_OK / PLAN_ISSUE
+2. 按 Task 拓扑顺序严格 TDD 执行 → 输出 handoff_run.md
 
-**执行流程**：
-```
-Tech Lead 前置工作（基础设施）
-    ↓
-Alice/Bob/Charlie 并行执行（严格 TDD）
-    ↓
-Tech Lead 后置工作（集成 + 服务启动验证）
-```
-
-**前置条件**：必须有符合规范的计划文档（v3.0 格式推荐）
+**前置条件**：有 `/plan` 的输出
 
 ---
 
-### 7. check（开发检查 v3.0）
+### 7. check（开发检查）
 
 **触发**：`/check`
 
-**用途**：开发完成后的一站式自检，**6 Agent 并行执行**
+**用途**：在隔离上下文中启动 pipeline-checker SubAgent，五维代码质量检查
 
-**版本**：v3.0（新增服务启动验证，2025-01-28）
+**机制**：`context: fork` + `agent: pipeline-checker` → 自动加载 `pipeline-code-quality` + `pipeline-review-standard` 知识
 
-**核心改进**：
-- **Agent6 服务启动验证**：必须亲眼看到服务正常启动并响应请求
-- 引用 `~/.claude/reference/完成前验证.md`
-
-**6 Agent 并行检查**：
-1. Agent1: 铁律检查（禁止降级、禁止硬编码、禁止Mock）
-2. Agent2: 后端自动化（ruff、mypy、pytest）
-3. Agent3: 前端自动化（lint、type-check、build）
-4. Agent4: 代码质量审查（安全、性能）
-5. Agent5: 文档同步检查
-6. **Agent6: 服务启动验证**（铁律：亲眼看到服务正常运行）
-
-**检查不通过**：列出问题和修复建议，修复后重新执行 `/check`
+**五维检查**：
+1. 测试：全量测试运行结果
+2. Lint：代码规范检查
+3. 类型检查：静态类型分析
+4. 代码质量规则：函数长度/参数/嵌套/空 catch 等
+5. AC 覆盖：逐条核对验收标准
 
 ---
 
@@ -310,31 +307,14 @@ Tech Lead 后置工作（集成 + 服务启动验证）
 
 **触发**：`/qa`
 
-**用途**：独立于开发的测试专家角色，运用专业测试方法，为最终交付质量负责
+**用途**：在隔离上下文中启动 pipeline-qa SubAgent，端到端功能验收
 
-**版本**：v2.0（专业测试方法论版，2025-01-23 更新）
+**机制**：`context: fork` + `agent: pipeline-qa` → 自动加载 `pipeline-qa-methodology` 知识
 
-**核心改进**：
-- 引入 ISTQB 测试设计方法（等价类、边界值、决策表、状态转换）
-- 测试金字塔指导（70% 单元 / 20% 集成 / 10% E2E）
-- pytest 自动化集成
-- 基础安全/性能测试检查
-
-**测试设计方法**：
-| 方法 | 适用场景 |
-|------|---------|
-| 等价类划分 | 输入有明确范围 |
-| 边界值分析 | 有数值边界 |
-| 决策表 | 复杂业务规则 |
-| 状态转换 | 有状态流转 |
-| 错误猜测 | 经验驱动 |
-
-**流程**：
-1. 测试前审问
-2. 环境检查
-3. **测试用例设计（专业方法）**
-4. 执行测试（自动化 + 手动）
-5. 生成测试报告 + 质量签字
+**核心原则**：
+- 验收标准唯一来源：handoff_clarify.md
+- 与 Check 差异化：Check 验代码质量，QA 验功能正确性
+- 端到端验证（黑盒视角）
 
 ---
 
@@ -510,6 +490,25 @@ Tech Lead 后置工作（集成 + 服务启动验证）
 - 禁止 force push
 
 **前置条件**：`/check` 或 `/qa` 通过后使用
+
+---
+
+### 17. auto-dev（全流程自动开发）
+
+**触发**：`/auto-dev`
+
+**用途**：在主对话中编排完整开发流程（design->plan->run-plan->check->qa）
+
+**与 pipeline.sh 的区别**：
+
+| 维度 | /auto-dev | pipeline.sh |
+|------|-----------|-------------|
+| 运行环境 | 主对话中 | 独立终端 |
+| 人工介入 | 实时确认检查点 | touch 文件确认 |
+| 加固机制 | 无（依赖 Claude Code 原生） | 超时/费用/锁/回滚锚点 |
+| 适用场景 | 日常开发 | 无人值守/CI/CD |
+
+**前置条件**：有 `/clarify` 的输出
 
 ---
 

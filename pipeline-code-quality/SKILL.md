@@ -1,3 +1,9 @@
+---
+name: pipeline-code-quality
+description: 代码质量标准。五维检查框架（测试/Lint/类型/代码质量规则/AC覆盖）、客观证据要求。
+user-invocable: false
+---
+
 # Code Quality - 代码质量标准
 
 > 引用者：pipeline-checker（主用）、pipeline-implementer（引用）、pipeline-fixer（引用）

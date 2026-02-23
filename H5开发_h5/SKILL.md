@@ -13,7 +13,7 @@ description: |
 
 # H5 移动端开发规范（UniApp + Vue3）
 
-> 基于 qft-harmonyos-vue3 项目 UI 规范，适用于 H5/小程序/App 多端开发
+> 适用于 H5/小程序/App 多端开发
 
 ---
 

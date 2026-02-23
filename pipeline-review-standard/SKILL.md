@@ -1,3 +1,9 @@
+---
+name: pipeline-review-standard
+description: 审查标准。对抗性审查思维、Design 评审标准、Plan 评审标准。
+user-invocable: false
+---
+
 # Review Standard - 审查标准
 
 > 引用者：pipeline-checker（主用）、pipeline-planner（引用，用于 Design 评审）

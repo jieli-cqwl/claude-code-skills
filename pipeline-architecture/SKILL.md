@@ -1,3 +1,9 @@
+---
+name: pipeline-architecture
+description: 架构设计方法论。先扫描再设计、多方案对比、接口完整性、模块边界设计。
+user-invocable: false
+---
+
 # Architecture - 架构设计方法论
 
 > 引用者：pipeline-designer（主用）、pipeline-planner（引用）
