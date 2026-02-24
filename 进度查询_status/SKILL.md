@@ -3,10 +3,8 @@ name: status
 command: status
 user_invocable: true
 description: |
-  Pipeline 进度查询。自动激活场景：
-  1) 用户说"查看进度"、"当前状态"、"运行到哪了"时
-  2) 用户问"Pipeline 跑得怎么样了"、"Pipeline 进度"时
-  查看当前项目的 Pipeline 运行状态、阶段进度和最近检查结果。
+  Pipeline 进度查询。查看当前项目的 Pipeline 运行状态、阶段进度和最近检查结果。
+  Use when: 查看进度、了解当前状态、Pipeline 运行情况。
 ---
 
 # Pipeline 进度查询 (Status)

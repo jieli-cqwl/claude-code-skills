@@ -3,11 +3,8 @@ name: mcp-builder
 command: mcp-builder
 user_invocable: true
 description: |
-  MCP 服务器开发指南。自动激活场景：
-  1) 用户说"开发 MCP"、"MCP 服务"、"做个 MCP server"时
-  2) 用户说"让 Claude 能调用外部服务"、"集成外部 API 给 AI 用"时
-  3) 需要让 LLM 与外部服务交互时
-  构建高质量的 Model Context Protocol 服务器。来源：anthropics/skills（官方）
+  MCP 服务器开发指南。构建让 LLM 与外部服务交互的 Model Context Protocol 服务器。
+  Use when: 开发 MCP server、集成外部 API 给 AI 用、需要 LLM 调用外部服务。
 ---
 
 # MCP Server Development Guide

@@ -2,7 +2,9 @@
 name: auto-dev
 command: auto-dev
 user_invocable: true
-description: 全流程自动开发编排。在主对话中依次触发 SubAgent 完成 design -> plan -> run-plan -> check -> qa 全流程。
+description: |
+  全流程自动开发编排。依次触发 SubAgent 完成 design → plan → run-plan → check → qa 全流程。
+  Use when: 一键自动化完整开发流程。
 ---
 
 # /auto-dev -- 全流程自动开发

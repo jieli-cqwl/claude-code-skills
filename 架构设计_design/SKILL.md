@@ -1,11 +1,8 @@
 ---
 name: design
 description: |
-  架构设计。自动激活场景：
-  1) 用户讨论系统架构、模块划分、接口设计时
-  2) 用户说"帮我设计一下"、"怎么设计这个功能"、"架构方案"时
-  3) /clarify 完成后用户准备进入设计阶段时
-  在隔离上下文中启动 pipeline-designer SubAgent。前置条件：需先完成 /clarify。
+  架构设计。在隔离上下文中启动 pipeline-designer SubAgent 输出设计文档和决策记录。
+  Use when: 讨论系统架构或模块划分、接口设计、/clarify 完成后进入设计阶段。前置条件：需先完成 /clarify。
 context: fork
 agent: pipeline-designer
 ---

@@ -3,11 +3,8 @@ name: admin-ui
 command: admin-ui
 user_invocable: true
 description: |
-  Admin 后台管理 UI 开发助手。自动激活场景：
-  1) 用户说"后台 UI"、"Admin 开发"、"开发后台页面"、"做一个管理页面"时
-  2) 用户说"Ant Design 怎么用"、"表格怎么写"、"表单怎么做"、"弹窗怎么写"时
-  3) 讨论数据展示、筛选功能时
-  提供组件规范、交互模式、最佳实践。
+  Ant Design 后台管理 UI 开发。提供页面布局、表格、表单、弹窗组件规范和交互模式最佳实践。
+  Use when: 开发后台管理页面、使用 Ant Design 组件、讨论数据展示或筛选功能。
 ---
 
 # Admin 后台管理 UI 开发助手

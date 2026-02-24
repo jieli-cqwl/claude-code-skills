@@ -4,11 +4,8 @@ command: security
 user_invocable: true
 parallel_mode: true
 description: |
-  安全漏洞扫描。自动激活场景：
-  1) 用户问"安全吗"、"有漏洞吗"、"安全检查"、"有没有注入风险"时
-  2) 准备发布或提交 PR 前讨论安全问题时
-  3) 用户提到 SQL 注入、XSS、CSRF 等安全关键词时
-  使用专业工具（Bandit/Semgrep/Gitleaks）系统检查 OWASP Top 10 漏洞，每个漏洞提供可执行修复代码。
+  安全漏洞扫描。使用 Bandit/Semgrep/Gitleaks 检查 OWASP Top 10 漏洞，提供可执行修复代码。
+  Use when: 安全检查、发现注入风险、发布前或 PR 合并前安全审查、涉及 SQL 注入/XSS/CSRF。
 ---
 
 # 安全扫描 (Security)

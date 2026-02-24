@@ -3,11 +3,8 @@ name: worktree
 command: worktree
 user_invocable: true
 description: |
-  Git Worktree 分支隔离。自动激活场景：
-  1) 用户说"分支隔离"、"隔离开发"、"创建 worktree"、"新建工作目录"时
-  2) 用户说"不想影响主分支"、"并行开发多个功能"时
-  3) 大型重构需要隔离环境时
-  为开发任务创建隔离的工作目录，避免影响主分支。来源：obra/superpowers（经过实战验证）
+  Git Worktree 分支隔离。为开发任务创建隔离的工作目录，避免影响主分支。
+  Use when: 隔离开发、并行开发多个功能、不想影响主分支、大型重构需要隔离环境。
 ---
 
 # Using Git Worktrees

@@ -1,10 +1,8 @@
 ---
 name: fix
 description: |
-  修复问题。自动激活场景：
-  1) /check 或 /qa 发现 FAIL 项后用户说"修一下"、"修复这些问题"时
-  2) 用户指出具体 bug 要求修复时
-  在隔离上下文中启动 pipeline-fixer SubAgent。前置条件：需有 /check 或 /qa 的 FAIL 报告。
+  修复问题。在隔离上下文中启动 pipeline-fixer SubAgent。
+  Use when: /check 或 /qa 发现 FAIL 项需要修复、用户指出具体 bug。前置条件：需有 FAIL 报告。
 context: fork
 agent: pipeline-fixer
 ---

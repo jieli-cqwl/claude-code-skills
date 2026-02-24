@@ -1,10 +1,8 @@
 ---
 name: skill-craft
 description: |
-  Skill 创建元知识。自动激活场景：
-  1) 用户说"创建一个 Skill"、"写个 Skill"、"新建 Skill"时
-  2) 用户讨论如何改进现有 Skill 质量时
-  三种 Skill 类型模板、7 项提示词工程核心技巧、质量自检清单、常见反模式。
+  Skill 创建元知识。提供三种 Skill 类型模板、提示词工程技巧、质量自检清单。
+  Use when: 创建新 Skill、改进现有 Skill 质量。
 user_invocable: true
 command: skill-craft
 ---
@@ -28,7 +26,9 @@ command: skill-craft
 ```markdown
 ---
 name: xxx
-description: 一句话描述
+description: |
+  一句话能力描述（动作导向，≤50字）。
+  Use when: 3-5 个语义触发条件，逗号分隔。前置条件：需先完成 /xxx。
 context: fork
 agent: pipeline-xxx
 user_invocable: true
@@ -107,7 +107,9 @@ user_invocable: false
 ```markdown
 ---
 name: xxx
-description: 一句话描述
+description: |
+  一句话能力描述（动作导向，≤50字）。
+  Use when: 3-5 个语义触发条件，逗号分隔。
 user_invocable: true
 command: xxx
 ---
@@ -272,6 +274,7 @@ command: xxx
 ### 结构完整性
 
 - [ ] frontmatter 是否包含 `name`, `description`, `user_invocable`？
+- [ ] description 是否遵循「能力描述 + Use when」两段格式？（知识 Skill 除外）
 - [ ] 入口 Skill 是否有 `context: fork` + `agent` 字段？
 - [ ] 知识 Skill 是否标注了引用者（`> 引用者：...`）？
 - [ ] 是否有 Few-shot 对比示例（好/坏成对）？
