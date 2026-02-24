@@ -2,28 +2,17 @@
 name: mcp-builder
 command: mcp-builder
 user_invocable: true
-description: MCP 服务器开发指南。构建高质量的 Model Context Protocol 服务器，让 LLM 能够与外部服务交互。适用于 AI 项目集成外部 API。来源：anthropics/skills（官方）
+description: |
+  MCP 服务器开发指南。自动激活场景：
+  1) 用户说"开发 MCP"、"MCP 服务"、"做个 MCP server"时
+  2) 用户说"让 Claude 能调用外部服务"、"集成外部 API 给 AI 用"时
+  3) 需要让 LLM 与外部服务交互时
+  构建高质量的 Model Context Protocol 服务器。来源：anthropics/skills（官方）
 ---
 
 # MCP Server Development Guide
 
 > **来源**: [anthropics/skills](https://github.com/anthropics/skills) - Anthropic 官方 Skills
-
----
-
-## 触发条件
-
-当用户使用以下任一方式时，立即激活此 skill：
-- 说"**开发 MCP**"或"**MCP 服务**"（主触发词）
-- 使用命令：`/mcp-builder`
-- 说"做个 MCP server"
-- 说"让 Claude 能调用外部服务"
-- 说"集成外部 API 给 AI 用"
-
-**适用场景**：
-- 需要让 LLM 与外部服务交互
-- 开发 Claude 插件/工具
-- 集成外部 API 到 AI 项目
 
 ---
 

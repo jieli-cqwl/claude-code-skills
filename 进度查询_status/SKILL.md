@@ -2,23 +2,17 @@
 name: status
 command: status
 user_invocable: true
-description: Pipeline 进度查询。查看当前项目的 Pipeline 运行状态、阶段进度和最近检查结果。
+description: |
+  Pipeline 进度查询。自动激活场景：
+  1) 用户说"查看进度"、"当前状态"、"运行到哪了"时
+  2) 用户问"Pipeline 跑得怎么样了"、"Pipeline 进度"时
+  查看当前项目的 Pipeline 运行状态、阶段进度和最近检查结果。
 ---
 
 # Pipeline 进度查询 (Status)
 
 > **目标**：展示当前项目 Pipeline 的运行状态和详细进度
 > **层级**：L2 主动查询（对应 L1 Status Line 被动显示）
-
----
-
-## 触发条件
-
-当用户使用以下任一方式时，立即激活此 skill：
-- 使用命令：`/status`
-- 说"Pipeline 进度"、"查看进度"
-- 说"当前状态"、"运行到哪了"
-- 说"Pipeline 跑得怎么样了"
 
 ---
 
