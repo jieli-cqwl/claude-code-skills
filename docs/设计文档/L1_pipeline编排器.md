@@ -56,7 +56,9 @@ CLI_CMD=claude-codex ~/.claude/pipeline.sh "用户管理" /path/to/project
 | `TOTAL_STEPS` | 6 | 主步骤数（design/plan/implement/check/qa/fix） |
 | `TOTAL_BUDGET` | 200.00（临时占位，环境变量） | 总费用安全网（USD），须通过 3 次实测校准 |
 | `START_STEP` | `design`（环境变量） | 断点续传入口：design / implement / qa |
-| `HUMAN_CHECKPOINT` | `true`（环境变量） | Design/Plan 人工确认开关（前 10 个需求建议保持开启，积累信心后可关闭） |
+| `HUMAN_CHECKPOINT` | `true`（环境变量） | Design/Plan 人工确认开关（默认确认型） |
+| `UNATTENDED_MODE` | `false`（环境变量） | 无人值守模式显式开关；开启后跳过确认等待，高风险场景直接失败退出 |
+| `TEST_CMD_ALLOWLIST` | 空（环境变量） | 测试命令允许列表（逗号分隔），未配置直接失败 |
 | `SKILLS_DIR` | `$HOME/.claude/skills` | Skills 知识层目录 |
 
 ---
@@ -74,7 +76,7 @@ notify_error() # Basso 音效，错误通知
 
 ### 4.2 wait_for_confirmation()
 
-人工确认函数，Design/Plan 方向性决策暂停等待用户确认。
+人工确认函数，Design/Plan 方向性决策暂停等待用户确认（UNATTENDED_MODE=true 时跳过等待）。
 
 - 写入进度状态 `waiting-confirmation`
 - 轮询等待确认文件（每 30 秒，最长 24 小时）
@@ -100,7 +102,7 @@ Handoff 结构化验证（最低限度格式检查，非质量保证）。
 
 ### 4.4 check_budget()
 
-费用累计检查。当前为步数 x STEP_BUDGET 估算（待 `claude -p` 支持 cost 输出后升级为实际费用）。超过 TOTAL_BUDGET 时暂停等待人工确认。
+费用累计检查。当前为步数 x STEP_BUDGET 估算（待 `claude -p` 支持 cost 输出后升级为实际费用）。超过 TOTAL_BUDGET 时默认暂停等待人工确认；UNATTENDED_MODE=true 时直接失败退出。TEST_CMD 仅允许 allowlist 中的命令执行，未配置 allowlist 直接失败。
 
 ### 4.5 update_progress()
 
@@ -257,7 +259,7 @@ build_prompt() {
 6. PASS -> 通知"QA 验收通过" -> exit 0
 7. FAIL -> fix_count++
    - >= 10 -> exit 1
-   - >= 5 -> 暂停通知人工介入
+   - >= 5 -> 默认暂停等待人工介入；UNATTENDED_MODE=true 时直接失败退出
    - >= 3 -> 注入历史修复上下文（避免重复方案）
 8. run_step "fix-N" -> handoff_fix_N.md
 9. run_step "re-check-N" -> handoff_check.md
@@ -309,7 +311,7 @@ build_prompt() {
 | Handoff 结构验证失败 | validate_handoff | exit 1 强阻断 |
 | 只读角色修改项目代码 | verify_no_code_changes（git diff） | exit 1 强阻断 |
 | QA 反复失败 >= 10 | fix_count 检查 | 通知 + exit 1 |
-| Fix 升级人工 >= 5 | fix_count 检查 | 暂停等待人工确认 |
+| Fix 升级人工 >= 5 | fix_count 检查 | 默认暂停等待人工确认；UNATTENDED_MODE=true 时直接失败退出 |
 | 同一 feature 重复启动 | mkdir 锁文件 | 拒绝启动 + 通知 |
 | 脚本被 kill | `trap EXIT` | 清理锁文件 |
 | 单步超时 | run_with_timeout（exit code 137） | 更新 failed + 通知 + exit 1 |
@@ -322,7 +324,7 @@ build_prompt() {
 | Check/QA 结果解析异常 | parse_result 防御性分支 | 通知 + exit 1 |
 | 人工确认超时（24h） | confirm 文件未出现 | 通知 + exit 1 |
 | 人工确认被拒绝 | confirm 文件内容 REJECT | 通知 + exit 1 |
-| 累计费用超预算 | TOTAL_COST > TOTAL_BUDGET | 暂停等待人工确认 |
+| 累计费用超预算 | TOTAL_COST > TOTAL_BUDGET | 默认暂停等待人工确认；UNATTENDED_MODE=true 时直接失败退出 |
 | Implement 中途失败 | 退出码非 0 或 handoff_run.md 未生成 | 通知用户 commit hash 列表，不自动回滚 |
 | 用户重跑同一 Feature | `pipeline.sh reset {feature}` | 删除除 clarify 外的所有产物 |
 | INFRA_ERROR（QA 阶段） | grep 服务启动失败/端口占用 | 不进入 Fix，直接 exit 1 |

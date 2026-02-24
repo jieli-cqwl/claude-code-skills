@@ -17,7 +17,7 @@ agent: pipeline-planner
 
 ## 前置条件
 
-`docs/pipeline/{feature}/handoff_design.md` 必须存在。如不存在，请先执行 `/design`。
+`docs/pipeline/{feature}/handoff_design.md` 必须存在。缺失时直接终止 /plan，并提示先执行 `/design`。
 
 ## 执行流程
 

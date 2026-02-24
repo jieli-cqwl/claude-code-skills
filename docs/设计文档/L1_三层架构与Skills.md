@@ -147,7 +147,7 @@ agent: pipeline-designer
 
 架构设计入口。SubAgent pipeline-designer 将在隔离上下文中执行：
 1. 读取 docs/pipeline/{feature}/handoff_clarify.md
-2. 执行架构设计（方法论由 SubAgent 的 skills 字段引入）
+2. 执行架构设计（方法论由 SubAgent 的 skills 字段（如 arch-methodology）引入）
 3. 输出到 docs/pipeline/{feature}/handoff_design.md
 
 > 如 handoff_clarify.md 不存在，请先执行 /clarify。

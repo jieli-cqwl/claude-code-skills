@@ -23,41 +23,88 @@ agent: pipeline-designer
 ## 执行流程
 
 1. 读取 `docs/pipeline/{feature}/handoff_clarify.md`
-2. 用 Glob/Grep 扫描现有代码，了解项目结构和编码模式
-3. 基于扫描结果和需求文档执行架构设计
-4. 关键决策列出 2-3 个备选方案并对比（方法论由 skills 引入的知识 Skill 提供）
-5. 输出到 `docs/pipeline/{feature}/handoff_design.md` + `Key_Decisions.md`
+2. 选择模板：clarify 规则 ≤ 3 条且涉及单模块 → 精简版；否则 → 完整版
+3. 用 Glob/Grep 扫描现有代码，了解项目结构和编码模式
+4. 基于扫描结果和需求文档执行架构设计
+5. 关键决策列出 2-3 个备选方案并对比（方法论由 arch-methodology Skill 提供）
+6. 输出到 `docs/pipeline/{feature}/handoff_design.md` + `Key_Decisions.md`
 
 ## 输出格式
 
-Handoff 文档必须包含以下结构：
+根据 clarify 文档的规则数量和模块范围选择模板：
+- **精简版**：clarify 规则 ≤ 3 条且涉及单模块
+- **完整版**：clarify 规则 > 3 条、跨模块或架构变更
+
+### 精简版模板
 
 ```markdown
 # handoff_design.md
 
+## Goals / Non-Goals
+### Goals
+- [G1: ...]
+### Non-Goals
+- [NG1: 本可以成为目标但被排除的事项...]
+
 ## 输入分析
 [扫描现有代码的发现 + clarify 规则逐条理解]
+
+## 架构视图（可选）
+> 涉及多模块交互时建议绘制，单模块内部改动可省略
 
 ## 决策
 [关键技术选型及方案对比]
 
 ## 产出
-
 ### 模块划分
-[模块列表，每个模块的"负责/不负责"]
-
 ### 接口清单
-[每个接口的入参/出参/错误码]
-
 ### 数据模型
-[模型定义和字段说明]
+
+## Open Questions
+[待确认假设，无则标"无待确认项"]
 
 ## 覆盖表
 [clarify 规则 -> 设计产出 -> 覆盖状态]
 
 ## 交接项
-- 接口清单（供 Planner 拆分任务）
-- 模块依赖图
-- 技术风险点
-- 设计约束
+```
+
+### 完整版模板
+
+```markdown
+# handoff_design.md
+
+## Goals / Non-Goals
+### Goals
+- [G1: ...]
+### Non-Goals
+- [NG1: 本可以成为目标但被排除的事项...]
+
+## 输入分析
+[扫描现有代码的发现 + clarify 规则逐条理解]
+
+## 架构视图
+[Mermaid C4 System Context 图 + Container 图，强制要求]
+
+## 决策
+[关键技术选型及方案对比]
+
+## 产出
+### 模块划分
+### 接口清单
+### 数据模型
+
+## 横切关注点
+[安全、隐私、可观测性、错误监控]
+
+## Open Questions
+[待确认假设]
+
+## 成功指标
+[可量化的验收标准]
+
+## 覆盖表
+[clarify 规则 -> 设计产出 -> 覆盖状态]
+
+## 交接项
 ```
