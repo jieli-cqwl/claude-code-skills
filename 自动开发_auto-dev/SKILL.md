@@ -1,5 +1,7 @@
 ---
 name: auto-dev
+command: auto-dev
+user_invocable: true
 description: 全流程自动开发编排。在主对话中依次触发 SubAgent 完成 design -> plan -> run-plan -> check -> qa 全流程。
 ---
 
@@ -7,6 +9,16 @@ description: 全流程自动开发编排。在主对话中依次触发 SubAgent 
 
 > 在主对话中编排完整的开发流程，依次触发各阶段 SubAgent 在隔离上下文中执行。
 > 适用于中大型需求的完整开发流程。小需求请直接使用单个 Skill。
+
+## 熔断机制
+
+| 循环 | 最大轮次 | 触发动作 |
+|------|---------|---------|
+| Design 评审 | 3 | 暂停，请用户介入 |
+| Plan 评审 | 3 | 暂停，请用户介入 |
+| Implement-Check | 3 | 暂停，请用户介入 |
+| QA-Fix | 5 | 暂停，请用户确认 |
+| QA-Fix | 10 | 终止，输出 FAIL 报告 |
 
 ## 前置条件
 

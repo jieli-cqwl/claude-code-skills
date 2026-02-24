@@ -9,6 +9,8 @@ context: fork
 agent: pipeline-planner
 ---
 
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-planner 执行。SubAgent 可用工具：Read, Write, Glob, Grep。参见 agents/pipeline-planner.md 的 allowedTools 定义 -->
+
 # /plan -- 编写实施计划
 
 > 在隔离上下文中将架构蓝图拆分为可执行的开发任务。同时负责评审 Design 文档。
@@ -23,7 +25,7 @@ agent: pipeline-planner
 1. 读取 `docs/pipeline/{feature}/handoff_clarify.md` + `handoff_design.md`
 2. 用 Glob 扫描验证任务中引用的文件路径
 3. 将架构设计拆分为可执行的 Tasks
-4. 每个 Task 包含：具体文件路径、可 assert 的 AC、依赖关系
+4. 每个 Task 包含：具体文件路径、可 assert 的 AC、依赖关系、共享文件标注
 5. 输出到 `docs/pipeline/{feature}/handoff_plan.md`
 
 ### Design 评审模式
@@ -52,8 +54,14 @@ agent: pipeline-planner
 - AC1: [可 assert 的验收标准]
 - AC2: [可 assert 的验收标准]
 - depends_on: []
+- shared_files: []
 
 ### Task-2: [标题]
+- 文件: [具体文件路径列表]
+- AC1: [可 assert 的验收标准]
+- depends_on: [Task-1]
+- shared_files: [被多个 Task 同时修改的文件路径列表]
+
 ...
 
 ## 覆盖表
@@ -65,6 +73,12 @@ agent: pipeline-planner
 - 每任务 AC
 - 测试策略
 ```
+
+**`shared_files` 字段说明**：
+- 含义：该 Task 修改的文件中，可能被其他 Task 也修改的文件列表
+- 填写规则：planner 在拆分任务时，对比各 Task 的文件列表，将交叉文件标注到 `shared_files`
+- 用途：run-plan 用此字段判断两个 Task 是否存在文件冲突，决定是否可以并行执行
+- 无交叉文件时为空列表 `[]`
 
 ### Design 评审输出
 

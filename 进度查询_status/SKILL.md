@@ -102,6 +102,25 @@ Pipeline 进度：{feature}
 
 ---
 
+## Few-shot 对比示例
+
+### 好的进度报告
+
+```
+[auto-dev] 进度: clarify(DONE) -> design(DONE) -> plan(IN PROGRESS) -> run-plan -> check -> qa
+当前阶段: 编写实施计划（Task 拆分中，预计 5 个 Tasks）
+耗时: 12 分钟 | Token: ~45K
+```
+
+### 坏的进度报告
+
+```
+正在处理中...
+```
+（无具体阶段、无进度指示、无时间信息，用户无法判断是否正常运行）
+
+---
+
 ## 注意事项
 
 - 此 Skill 是**只读**操作，不修改任何文件

@@ -10,6 +10,8 @@ context: fork
 agent: pipeline-designer
 ---
 
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-designer 执行。SubAgent 可用工具：Read, Write, Glob, Grep, WebSearch。参见 agents/pipeline-designer.md 的 allowedTools 定义 -->
+
 # /design -- 架构设计
 
 > 在隔离上下文中执行架构设计，输出架构设计文档和关键决策记录。

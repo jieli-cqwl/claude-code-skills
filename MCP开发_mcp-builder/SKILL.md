@@ -201,6 +201,24 @@ annotations: {
 
 ---
 
+## Few-shot 对比示例
+
+### 好的 MCP Server
+
+- 工具定义完整：名称、描述、参数 schema（含类型、必填、默认值）
+- 错误处理规范：参数校验失败返回 `isError: true` + 用户友好消息
+- 幂等性：同一请求重复调用返回一致结果
+- 资源清理：连接池在 server shutdown 时正确关闭
+
+### 坏的 MCP Server
+
+- 工具描述为空或过于简短（LLM 无法理解何时调用此工具）
+- 异常直接抛出裸 Error（调用方看到 "Internal Server Error"，无法定位问题）
+- 无输入校验（传入非法参数时 server crash）
+- 长连接未设超时（网络中断时连接泄漏，最终耗尽资源）
+
+---
+
 ## 资源
 
 - [MCP 协议文档](https://modelcontextprotocol.io)

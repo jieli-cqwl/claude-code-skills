@@ -1,7 +1,7 @@
 ---
 name: code-quality
 description: 代码质量标准。五维检查框架（测试/Lint/类型/代码质量规则/AC覆盖）、客观证据要求。
-user-invocable: false
+user_invocable: false
 ---
 
 # Code Quality - 代码质量标准
@@ -62,6 +62,9 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
 | 裸 except | 0 个 | Grep 搜索 |
 | 硬编码密钥/密码 | 0 个 | Grep 搜索 |
 | 占位符代码 | 0 个（NotImplementedError, TODO, FIXME） | Grep 搜索 |
+| 文档同步 | 必要文档已更新/归档 | 依据 reference/文档规范.md |
+| 消息 key | 无硬编码消息，新增 key 已登记 | 依据 reference/消息配置规范.md |
+| 跨模块常量 | 无跨模块导入模块常量 | 依据 reference/硬编码治理规范.md |
 
 每个违规项必须列出具体位置：
 
@@ -70,6 +73,17 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
   FAIL: src/api/users.py:35 create_user() 有 6 个参数（标准 <= 5）
   FAIL: src/services/auth.py:12-68 authenticate() 共 57 行（标准 <= 40）
   PASS: 无空 catch、无裸 except、无硬编码
+```
+
+新增三类扫描同样必须给出证据：
+
+```
+文档同步:
+  PASS: docs/API/接口_用户.md 已更新（git diff 证据）
+消息 key:
+  FAIL: 新增错误提示未登记 messages.yaml（src/api/users.py:88）
+跨模块常量:
+  FAIL: src/services/user.py 跨模块导入 adapters 常量（路径证据）
 ```
 
 ### 维度 5：AC 覆盖
@@ -116,8 +130,8 @@ REQUIRED：在给出 PASS 或 FAIL 结论前，必须先完成偏差自检（第
 ### 判定规则
 
 ```
-偏差自检通过 + 五维全 PASS -> RESULT: PASS
-任何一维 FAIL -> RESULT: FAIL
+偏差自检通过 + 五维全 PASS + 三类新增扫描全 PASS -> RESULT: PASS
+任何一维 FAIL 或 任一新增扫描 FAIL -> RESULT: FAIL
 偏差自检发现问题 -> 回到对应维度重新检查
 ```
 

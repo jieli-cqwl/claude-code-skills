@@ -177,7 +177,24 @@ gh pr create --title "feat: xxx" --body "..."
 
 ---
 
-## ✅ 完成提示
+## Few-shot 对比示例
+
+### 好的 Worktree 使用
+
+- 每个 worktree 对应一个独立特性分支
+- 完成后及时清理：`git worktree remove <path>`
+- 主分支 worktree 保持干净，不做开发
+
+### 坏的 Worktree 使用（反模式）
+
+- 在同一个 worktree 中混合多个特性的修改（合并时灾难）
+- 创建大量 worktree 不清理（磁盘空间膨胀，`git worktree list` 输出混乱）
+- 在 worktree 之间手动复制文件而非通过 git merge/cherry-pick（丢失 git 历史）
+- 忘记 worktree 的存在，在主仓库直接 `git branch -D` 删除分支（worktree 变成孤儿状态）
+
+---
+
+## 完成提示
 
 当 Worktree 创建完成后，输出：
 

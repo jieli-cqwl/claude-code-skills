@@ -1,7 +1,7 @@
 ---
 name: tdd-methodology
 description: TDD 方法论。严格红绿重构流程、一任务一 Commit、阻塞标注、修复 TDD 变体。
-user-invocable: false
+user_invocable: false
 ---
 
 # TDD Methodology - TDD 方法论

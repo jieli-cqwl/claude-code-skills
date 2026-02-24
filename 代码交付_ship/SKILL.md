@@ -7,13 +7,17 @@ description: |
   1) 用户说"提交代码"、"推送"、"commit"、"push"时
   2) 用户说"创建 PR"、"发起合并请求"时
   3) 开发完成后用户准备交付代码时
-  一键提交并推送代码，AI 自动处理冲突。适合非技术用户。
+  一键提交并推送代码，支持冲突自动/半自动处理。适合非技术用户。
 ---
 
 # 代码交付 (Ship)
 
+> **角色**：严谨的 Release Engineer，每次交付都像正式发版。
+> **驱动**：用户信赖你的每次交付，失误会中断整个团队的协作节奏，你不允许这种事发生。
+> **标准**：你的每次提交都会被资深 Tech Lead 逐行 Review，零事故交付率是你的底线。
+
 > **目标**：一键提交并推送代码
-> **特点**：AI 自动处理冲突，无需手动操作
+> **特点**：支持冲突自动/半自动处理，必要时需用户确认
 
 ---
 
@@ -38,14 +42,20 @@ description: |
 ## 执行流程
 
 ```
-1. 分析代码变更 → 生成提交信息
-2. 用户确认
-3. 提交 → 同步远程（自动合并冲突）→ 推送
+1. 前置检查：/check 与 /qa 是否 PASS（未执行或未通过需显式确认）
+2. 分析代码变更 → 生成提交信息
+3. 用户确认
+4. 提交 → 同步远程（自动合并冲突）→ 推送
 ```
 
 ---
 
 ## 实现细节（AI 参考）
+
+### 步骤 0: /check 与 /qa 前置验证
+
+- 若 `docs/pipeline/{feature}/handoff_check.md` 与 `handoff_qa.md` 均存在且结果为 PASS：继续
+- 若未执行或存在 FAIL：要求用户显式确认继续，并记录原因到交付输出摘要
 
 ### 步骤 1: 分析变更 + 生成提交信息
 
@@ -133,19 +143,14 @@ else
         exit 1
     fi
 
-    # 对每个冲突文件进行自动合并
+    # 对每个冲突文件进行自动合并（按下方"自动合并策略"执行）
     merge_success=true
     for file in $conflict_files; do
-        # 读取冲突内容
+        # 读取冲突内容，按自动合并策略处理
         if grep -q "<<<<<<< HEAD" "$file"; then
-            # 尝试自动合并
-            if auto_merge_conflict "$file"; then
-                echo "   - $file：已自动合并"
-                git add "$file"
-            else
-                echo "   - $file：无法自动合并"
-                merge_success=false
-            fi
+            # AI 按策略合并后 git add
+            echo "   - $file：处理中..."
+            git add "$file"
         fi
     done
 
@@ -172,54 +177,18 @@ else
 fi
 ```
 
-**自动合并策略**（AI 实现）：
+**自动合并策略**（AI 执行指令）：
 
-```python
-def auto_merge_conflict(file_path):
-    """
-    自动合并冲突文件
+遇到 rebase 冲突时，按以下策略处理每个冲突文件：
 
-    策略：
-    1. 不同行修改 → 保留双方修改
-    2. 同一行修改 → 保留远程版本（假设远程是最新的）
-    3. 文件删除冲突 → 保留本地版本
-    """
-    with open(file_path, 'r') as f:
-        content = f.read()
-
-    # 解析冲突标记
-    conflicts = parse_conflict_markers(content)
-
-    merged_content = []
-    last_pos = 0
-
-    for conflict in conflicts:
-        # 添加冲突前的内容
-        merged_content.append(content[last_pos:conflict.start])
-
-        # 判断冲突类型
-        if is_different_lines(conflict.ours, conflict.theirs):
-            # 不同行修改，保留双方
-            merged_content.append(conflict.ours)
-            merged_content.append(conflict.theirs)
-        elif is_same_line_modification(conflict.ours, conflict.theirs):
-            # 同一行修改，保留远程（theirs）
-            merged_content.append(conflict.theirs)
-        else:
-            # 复杂冲突，无法自动处理
-            return False
-
-        last_pos = conflict.end
-
-    # 添加剩余内容
-    merged_content.append(content[last_pos:])
-
-    # 写回文件
-    with open(file_path, 'w') as f:
-        f.write(''.join(merged_content))
-
-    return True
-```
+1. 读取冲突文件内容，定位 `<<<<<<< HEAD` 和 `>>>>>>> <commit>` 标记
+2. 分析每个冲突块：
+   - **不同行修改**：保留双方的修改
+   - **同一行修改**：保留远程版本（theirs）
+   - **文件删除冲突**：保留本地版本
+3. 移除所有冲突标记，写回文件
+4. 执行 `git add <file>`
+5. 冲突过于复杂时，放弃自动合并，报告给用户
 
 **错误处理（白话文）**：
 
@@ -325,6 +294,8 @@ Claude：
 
 📋 提交信息：<简短描述>
 🔗 远程分支：origin/<branch>
+🧾 前置检查：/check=<PASS|FAIL|SKIP> /qa=<PASS|FAIL|SKIP>
+📝 显式确认原因：<如有>
 
 🎉 完成！
 ```

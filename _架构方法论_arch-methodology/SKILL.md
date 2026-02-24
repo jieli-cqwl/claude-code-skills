@@ -1,7 +1,7 @@
 ---
 name: arch-methodology
 description: 架构设计方法论。先扫描再设计、多方案对比、接口完整性、模块边界设计。
-user-invocable: false
+user_invocable: false
 ---
 
 # Architecture - 架构设计方法论

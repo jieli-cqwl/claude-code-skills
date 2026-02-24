@@ -9,6 +9,8 @@ context: fork
 agent: pipeline-qa
 ---
 
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-qa 执行。SubAgent 可用工具：Read, Bash, Glob, Grep。参见 agents/pipeline-qa.md 的 allowedTools 定义 -->
+
 # /qa -- 测试验收
 
 > 在隔离上下文中从用户视角端到端验证功能是否满足需求。

@@ -5,8 +5,8 @@ description: |
   1) 用户说"创建一个 Skill"、"写个 Skill"、"新建 Skill"时
   2) 用户讨论如何改进现有 Skill 质量时
   三种 Skill 类型模板、7 项提示词工程核心技巧、质量自检清单、常见反模式。
-user-invocable: true
-trigger: /skill-craft
+user_invocable: true
+command: skill-craft
 ---
 
 # Skill Craft - 高质量 Skill 创建指南
@@ -31,8 +31,8 @@ name: xxx
 description: 一句话描述
 context: fork
 agent: pipeline-xxx
-user-invocable: true
-trigger: /xxx
+user_invocable: true
+command: xxx
 ---
 
 # 前置条件检查
@@ -53,7 +53,7 @@ trigger: /xxx
 - 领域知识放在知识 Skill 中，由 SubAgent 的 `skills` 字段引用
 - 执行流程必须精确到 SubAgent 可以无歧义执行
 
-### 类型 B：知识 Skill（`user-invocable: false`）
+### 类型 B：知识 Skill（`user_invocable: false`）
 
 **职责**：Reference material — 领域知识、方法论、检查清单
 
@@ -63,7 +63,7 @@ trigger: /xxx
 ---
 name: xxx
 description: 一句话描述
-user-invocable: false
+user_invocable: false
 ---
 
 # [领域名] - [主题]
@@ -108,8 +108,8 @@ user-invocable: false
 ---
 name: xxx
 description: 一句话描述
-user-invocable: true
-trigger: /xxx
+user_invocable: true
+command: xxx
 ---
 
 # [Skill 名]
@@ -271,7 +271,7 @@ trigger: /xxx
 
 ### 结构完整性
 
-- [ ] frontmatter 是否包含 `name`, `description`, `user-invocable`？
+- [ ] frontmatter 是否包含 `name`, `description`, `user_invocable`？
 - [ ] 入口 Skill 是否有 `context: fork` + `agent` 字段？
 - [ ] 知识 Skill 是否标注了引用者（`> 引用者：...`）？
 - [ ] 是否有 Few-shot 对比示例（好/坏成对）？
@@ -294,8 +294,8 @@ trigger: /xxx
 
 ### 注册完整性
 
-- [ ] 是否在 `skills/STANDARD.md` 中注册？
-- [ ] STANDARD.md 中的描述是否与 Skill 一致？
+- [ ] 是否在 `skills/` 目录内有对应 `SKILL.md`？
+- [ ] 入口 Skill 是否在对外文档中有可发现的入口说明（如 `docs/QUICKSTART.md`）？
 - [ ] 如果是入口 Skill，对应的 SubAgent 是否存在？
 
 ---
@@ -315,38 +315,29 @@ trigger: /xxx
 
 ---
 
-## 5. STANDARD.md 注册指南
+## 5. 入口说明与注册规则
 
-新 Skill 创建后，必须在 `~/.claude/skills/STANDARD.md` 中注册。
+新 Skill 创建后：
 
-### 入口 Skill 注册模板
+- **必须**在 `skills/` 目录内创建对应 `SKILL.md`
+- **入口 Skill**：在对外说明文档中补充可发现的入口（如 `docs/QUICKSTART.md`）
+- **知识 Skill**：不在对外文档中登记，仅由 SubAgent 的 `skills` 字段引用
 
-在 `## Skills 详情` 中追加：
+### 入口 Skill 说明模板（对外文档）
+
+在 `docs/QUICKSTART.md` 追加：
 
 ```markdown
-### N. xxx（中文名）
-
-**触发**：`/xxx`
-
-**用途**：一句话描述
-
-**版本**：v1.0（日期）
-
-**核心产出**：
-- [产出列表]
-
-**前置条件**：[依赖什么]
+- `/xxx`：一句话描述（适用场景）
 ```
-
-同时在 `## 快速选择` 表格中追加一行。
 
 ### 知识 Skill 注册
 
-知识 Skill 不在 STANDARD.md 的 Skills 详情中注册（因为用户不直接使用），但需要在引用它的 SubAgent 的 `skills` 字段中声明。
+知识 Skill 不登记在对外入口，但需要在引用它的 SubAgent 的 `skills` 字段中声明。
 
 ### 独立 Skill 注册
 
-同入口 Skill，在 STANDARD.md 中注册触发命令和描述。
+同入口 Skill，需要对外说明入口与用途。
 
 ---
 
@@ -359,5 +350,5 @@ trigger: /xxx
 3. **选择技巧组合**：根据任务类型从 7 项技巧中选择 3-5 项最相关的
 4. **生成 Skill 文件**：使用对应类型的模板 + 选中的技巧
 5. **质量自检**：对照自检清单逐项验证
-6. **注册**：在 STANDARD.md 中注册（如果是用户可调用的）
+6. **登记入口**：如为用户可调用 Skill，在对外文档补充入口说明
 7. **输出**：展示创建的文件路径和自检结果

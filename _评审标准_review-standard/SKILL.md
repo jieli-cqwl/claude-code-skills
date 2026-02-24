@@ -1,7 +1,7 @@
 ---
 name: review-standard
 description: 审查标准。对抗性审查思维、Design 评审标准、Plan 评审标准。
-user-invocable: false
+user_invocable: false
 ---
 
 # Review Standard - 审查标准
