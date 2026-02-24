@@ -2,7 +2,12 @@
 name: ship
 command: ship
 user_invocable: true
-description: 代码交付。一键提交并推送代码，AI 自动处理冲突。适合非技术用户。
+description: |
+  代码交付。自动激活场景：
+  1) 用户说"提交代码"、"推送"、"commit"、"push"时
+  2) 用户说"创建 PR"、"发起合并请求"时
+  3) 开发完成后用户准备交付代码时
+  一键提交并推送代码，AI 自动处理冲突。适合非技术用户。
 ---
 
 # 代码交付 (Ship)

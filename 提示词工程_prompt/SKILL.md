@@ -2,7 +2,11 @@
 name: prompt
 command: prompt
 user_invocable: true
-description: 提示词工程师。根据用户需求，运用最佳实践技巧组合，生成高质量的结构化提示词。
+description: |
+  提示词工程师。自动激活场景：
+  1) 用户说"帮我写个提示词"、"优化提示词"、"生成 prompt"时
+  2) 用户讨论如何让 AI 更好地完成某个任务时
+  根据用户需求，运用最佳实践技巧组合，生成高质量的结构化提示词。
 ---
 
 # 提示词工程 Skill

@@ -3,7 +3,12 @@ name: security
 command: security
 user_invocable: true
 parallel_mode: true
-description: 安全漏洞扫描。在代码发布前、PR 合并前、安全审计时使用。使用专业工具（Bandit/Semgrep/Gitleaks）系统检查 OWASP Top 10 漏洞，每个漏洞提供可执行修复代码。
+description: |
+  安全漏洞扫描。自动激活场景：
+  1) 用户问"安全吗"、"有漏洞吗"、"安全检查"时
+  2) 准备发布或提交 PR 前讨论安全问题时
+  3) 用户提到 SQL 注入、XSS、CSRF 等安全关键词时
+  使用专业工具（Bandit/Semgrep/Gitleaks）系统检查 OWASP Top 10 漏洞，每个漏洞提供可执行修复代码。
 ---
 
 # 安全扫描 (Security)

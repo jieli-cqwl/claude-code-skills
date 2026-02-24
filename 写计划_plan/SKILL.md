@@ -1,6 +1,10 @@
 ---
 name: plan
-description: 编写实施计划。在隔离上下文中启动 pipeline-planner SubAgent。
+description: |
+  编写实施计划。自动激活场景：
+  1) 用户说"拆分任务"、"写个计划"、"开发计划"时
+  2) /design 完成后用户准备进入计划阶段时
+  在隔离上下文中启动 pipeline-planner SubAgent。前置条件：需先完成 /design。
 context: fork
 agent: pipeline-planner
 ---

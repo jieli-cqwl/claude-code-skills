@@ -2,7 +2,13 @@
 name: clarify
 command: clarify
 user_invocable: true
-description: 需求澄清。基于项目上下文的精准提问，结合苏格拉底五类提问和 Example Mapping 暴露隐含假设，确保双方对需求无歧义。在架构设计（/design）之前使用。
+description: |
+  需求澄清。自动激活场景：
+  1) 用户描述一个新需求或新功能时（"帮我做XXX"、"我需要XXX功能"、"实现一个XXX"）
+  2) 用户提出模糊需求需要细化时（"这个功能应该怎么做"、"需求是XXX"）
+  3) 用户明确说需求澄清、需求对齐时
+  无需说"/clarify"，只要对话涉及「新需求描述」「功能规划」「需求讨论」就自动触发
+  基于项目上下文的精准提问，结合苏格拉底五类提问和 Example Mapping 暴露隐含假设。在架构设计（/design）之前使用。
 ---
 
 # 需求澄清 (Clarify)

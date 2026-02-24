@@ -1,6 +1,10 @@
 ---
 name: qa
-description: 测试验收。在隔离上下文中启动 pipeline-qa SubAgent。
+description: |
+  测试验收。自动激活场景：
+  1) 用户说"测试一下"、"验收"、"功能对不对"、"端到端测试"时
+  2) /check 通过后用户准备验证功能正确性时
+  在隔离上下文中启动 pipeline-qa SubAgent 做端到端功能验收。前置条件：需先完成 /clarify。
 context: fork
 agent: pipeline-qa
 ---

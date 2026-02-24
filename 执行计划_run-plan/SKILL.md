@@ -1,6 +1,10 @@
 ---
 name: run-plan
-description: 执行计划。在隔离上下文中启动 pipeline-implementer SubAgent。
+description: |
+  执行计划。自动激活场景：
+  1) 用户说"开始开发"、"执行计划"、"按计划实现"时
+  2) /plan 完成后用户准备进入开发阶段时
+  在隔离上下文中启动 pipeline-implementer SubAgent。前置条件：需先完成 /plan。
 context: fork
 agent: pipeline-implementer
 ---

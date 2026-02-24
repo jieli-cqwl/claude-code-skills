@@ -3,7 +3,12 @@ name: perf
 command: perf
 user_invocable: true
 parallel_mode: true
-description: 性能分析诊断。在发现慢接口、性能优化、上线前验收时使用。使用专业工具（pyinstrument/py-spy/nplusone）定位热点函数和 N+1 查询，输出火焰图和可视化报告。
+description: |
+  性能分析诊断。自动激活场景：
+  1) 用户说"太慢了"、"性能怎么样"、"卡"、"响应慢"时
+  2) 用户问"有 N+1 查询吗"、"哪里是瓶颈"时
+  3) 上线前需要性能验收时
+  使用专业工具（pyinstrument/py-spy/nplusone）定位热点函数和 N+1 查询，输出火焰图和可视化报告。
 ---
 
 # 性能分析 (Performance)

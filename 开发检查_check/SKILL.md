@@ -1,6 +1,10 @@
 ---
 name: check
-description: 开发检查。在隔离上下文中启动 pipeline-checker SubAgent。
+description: |
+  开发检查。自动激活场景：
+  1) 用户说"检查一下代码"、"代码质量怎么样"、"跑一下检查"时
+  2) 开发完成后用户准备验证代码质量时
+  在隔离上下文中启动 pipeline-checker SubAgent 做五维代码质量检查。前置条件：需先完成 /run-plan。
 context: fork
 agent: pipeline-checker
 ---
