@@ -11,6 +11,14 @@
 | **三种使用方式** | 主对话直接用 Skill、触发 SubAgent 隔离执行、全流程自动编排 |
 | **三层架构** | 编排层（Skill/pipeline.sh）+ 执行层（SubAgent 角色卡）+ 知识层（知识型 Skill） |
 | **严格 TDD** | 没有先失败的测试，就没有生产代码 |
+
+### 三层职责分工
+
+| 层 | 文件 | 职责 | 包含内容 |
+|----|------|------|---------|
+| **入口 Skill**（`context: fork`） | `skills/架构设计_design/SKILL.md` 等 | Task prompt — 驱动 SubAgent 的任务指令 | 前置条件、执行流程、输出格式 |
+| **SubAgent**（`agents/`） | `agents/pipeline-designer.md` 等 | Role identity — 角色身份和行为约束 | 身份定义、负向约束、工具权限 |
+| **知识 Skill**（`user-invocable: false`） | `skills/_架构方法论_arch-methodology/` 等 | Reference material — 领域知识 | 方法论、Few-shot、检查清单、反模式 |
 | **完成前验证** | 只有亲眼看到验证命令成功，才能声称完成 |
 
 ## 规范文件说明
@@ -36,7 +44,7 @@
 
 不需要上下文隔离时，直接在主对话中使用 Skill。
 
-适用 Skill：`/clarify`, `/ship`, `/refactor`, `/overview`, `/status`, `/security`, `/perf`, `/scan`, `/worktree`, `/mcp-builder`, `/admin-ui`, `/h5`, `/product`
+适用 Skill：`/clarify`, `/ship`, `/refactor`, `/overview`, `/status`, `/security`, `/perf`, `/scan`, `/worktree`, `/mcp-builder`, `/admin-ui`, `/h5`, `/product`, `/prompt`
 
 ### 方式 2：触发 SubAgent 隔离执行
 
@@ -114,6 +122,7 @@
 | **全流程编排** | `/auto-dev` | 主对话中编排完整开发流程（含人工确认检查点） |
 | **Pipeline 进度** | `/status` | 查看当前 Pipeline 运行阶段和进度 |
 | **代码交付** | `/ship` | 提交、推送、创建 PR 一键完成 |
+| 提示词工程 | `/prompt` | 根据需求场景生成高质量结构化提示词 |
 
 ---
 
@@ -208,7 +217,7 @@
 
 **用途**：在隔离上下文中启动 pipeline-designer SubAgent 执行架构设计
 
-**机制**：`context: fork` + `agent: pipeline-designer` → 自动加载 `pipeline-architecture` 知识
+**机制**：`context: fork` + `agent: pipeline-designer` → 自动加载 `arch-methodology` 知识
 
 **核心产出**：
 - handoff_design.md（模块划分、接口设计、数据模型）
@@ -238,7 +247,7 @@
 
 **用途**：在隔离上下文中启动 pipeline-planner SubAgent，将架构蓝图拆分为可执行任务
 
-**机制**：`context: fork` + `agent: pipeline-planner` → 自动加载 `pipeline-architecture` + `pipeline-review-standard` 知识
+**机制**：`context: fork` + `agent: pipeline-planner` → 自动加载 `arch-methodology` + `review-standard` 知识
 
 **双职责**：
 1. 评审 Design 文档 → 输出 DESIGN_OK / DESIGN_ISSUE
@@ -276,7 +285,7 @@
 
 **用途**：在隔离上下文中启动 pipeline-implementer SubAgent，严格 TDD 执行开发
 
-**机制**：`context: fork` + `agent: pipeline-implementer` → 自动加载 `pipeline-tdd-methodology` + `pipeline-code-quality` 知识
+**机制**：`context: fork` + `agent: pipeline-implementer` → 自动加载 `tdd-methodology` + `code-quality` 知识
 
 **双职责**：
 1. 评审 Plan 文档 → 输出 PLAN_OK / PLAN_ISSUE
@@ -292,7 +301,7 @@
 
 **用途**：在隔离上下文中启动 pipeline-checker SubAgent，五维代码质量检查
 
-**机制**：`context: fork` + `agent: pipeline-checker` → 自动加载 `pipeline-code-quality` + `pipeline-review-standard` 知识
+**机制**：`context: fork` + `agent: pipeline-checker` → 自动加载 `code-quality` + `review-standard` 知识
 
 **五维检查**：
 1. 测试：全量测试运行结果
@@ -309,7 +318,7 @@
 
 **用途**：在隔离上下文中启动 pipeline-qa SubAgent，端到端功能验收
 
-**机制**：`context: fork` + `agent: pipeline-qa` → 自动加载 `pipeline-qa-methodology` 知识
+**机制**：`context: fork` + `agent: pipeline-qa` → 自动加载 `qa-methodology` 知识
 
 **核心原则**：
 - 验收标准唯一来源：handoff_clarify.md
@@ -509,6 +518,33 @@
 | 适用场景 | 日常开发 | 无人值守/CI/CD |
 
 **前置条件**：有 `/clarify` 的输出
+
+---
+
+### 18. prompt（提示词工程）
+
+**触发**：`/prompt`
+
+**用途**：根据用户描述的需求场景，运用最佳实践技巧组合，生成高质量的结构化提示词
+
+**版本**：v1.0（2026-02-23）
+
+**知识来源**：
+- 技巧索引：`skills/提示词工程_prompt/references/technique-catalog.md`（16 种技巧精简索引）
+- 模板库：`skills/提示词工程_prompt/references/output-templates.md`（5 种场景模板）
+- 按需深入：`docs/学习笔记/AI对话系统高级玩法手册.md` | `docs/学习笔记/Gemini 提示词实践指南.md`
+
+**五步流程**：
+1. **需求分析**：收集用途/模型/使用方式/语言，识别任务特征标签
+2. **技巧选择**：根据特征标签从 16 种技巧中路由 2-4 种最优组合，等用户确认
+3. **生成提示词**：选择模板 + 嵌入技巧 + 约束前置结构框架组织
+4. **自检优化**：结构性 + 效果性 + 鲁棒性三维检查
+5. **输出**：Part A 可复制的提示词正文 + Part B 设计说明
+
+**输出特点**：
+- 不保存文件，直接在对话中展示
+- 标记语言根据目标模型自动选择（Claude→XML, GPT/通用→Markdown）
+- 约束前置：身份定义 → 核心约束 → 能力 → 规则 → 输出格式
 
 ---
 

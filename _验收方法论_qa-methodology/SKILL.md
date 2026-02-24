@@ -1,5 +1,5 @@
 ---
-name: pipeline-qa-methodology
+name: qa-methodology
 description: QA 验收方法论。验收标准唯一来源原则、与 Check 差异化、逐条需求覆盖、端到端验证。
 user-invocable: false
 ---

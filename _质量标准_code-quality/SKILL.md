@@ -1,5 +1,5 @@
 ---
-name: pipeline-code-quality
+name: code-quality
 description: 代码质量标准。五维检查框架（测试/Lint/类型/代码质量规则/AC覆盖）、客观证据要求。
 user-invocable: false
 ---
