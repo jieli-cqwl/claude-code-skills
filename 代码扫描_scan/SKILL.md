@@ -199,7 +199,7 @@ Phase 3: 汇总报告
 /refactor（代码重构）
 
 日常开发流程：
-/plan → /run-plan → /check → /qa → /ship
+/plan → /run-plan[/run-plan-parallel] → /check → /qa → /ship
                        ↑
               /scan 与 /check 互补
               /scan: 全量存量检查

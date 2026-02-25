@@ -2,7 +2,7 @@
 name: check
 description: |
   开发检查。在隔离上下文中启动 pipeline-checker SubAgent 做五维代码质量检查。
-  Use when: 检查代码质量、开发完成准备验证。前置条件：需先完成 /run-plan。
+  Use when: 检查代码质量、开发完成准备验证。前置条件：需先完成 /run-plan 或 /run-plan-parallel。
 context: fork
 agent: pipeline-checker
 ---
@@ -15,7 +15,7 @@ agent: pipeline-checker
 
 ## 前置条件
 
-`docs/pipeline/{feature}/handoff_run.md` 必须存在。如不存在，请先执行 `/run-plan`。
+`docs/pipeline/{feature}/handoff_run.md` 必须存在。如不存在，请先执行 `/run-plan` 或 `/run-plan-parallel`。
 
 ## 执行流程
 

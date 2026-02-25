@@ -132,7 +132,7 @@
 /plan（写计划）
     | 引用 /clarify 的规则与示例，禁止重新定义
     v
-/run-plan（执行计划）
+/run-plan[/run-plan-parallel]（执行计划）
     | 严格 TDD，从规则与示例生成测试并基于测试开发
     v
 /check（开发检查）
@@ -148,7 +148,7 @@
     |
 /plan 引用规则（禁止重新定义）
     |
-/run-plan 严格 TDD（从规则生成测试 + 基于测试开发）
+/run-plan[/run-plan-parallel] 严格 TDD（从规则生成测试 + 基于测试开发）
     |
 /qa 基于规则和示例验收
 ```

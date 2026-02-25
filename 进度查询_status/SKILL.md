@@ -99,7 +99,7 @@ Pipeline 进度：{feature}
 ### 好的进度报告
 
 ```
-[auto-dev] 进度: clarify(DONE) -> design(DONE) -> plan(IN PROGRESS) -> run-plan -> check -> qa
+[auto-dev] 进度: clarify(DONE) -> design(DONE) -> plan(IN PROGRESS) -> run-plan[-parallel] -> check -> qa
 当前阶段: 编写实施计划（Task 拆分中，预计 5 个 Tasks）
 耗时: 12 分钟 | Token: ~45K
 ```

@@ -1,3 +1,5 @@
+<!-- SUPERSEDED: 2026-02-25 | 并行编排逻辑已迁移至 /run-plan-parallel (skills/并行开发_run-plan-parallel/SKILL.md)。本文件保留供参考，不再作为执行指南。 -->
+
 # Tech Lead 操作手册
 
 > 执行计划时，Tech Lead（你）的详细操作指南

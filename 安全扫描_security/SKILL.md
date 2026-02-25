@@ -327,7 +327,7 @@ cursor.execute(query, (user_id,))
 ```
 /clarify → /explore → /design → /plan
                                    ↓
-                        /run-plan (开发)
+                        /run-plan[/run-plan-parallel] (开发)
                                    ↓
 /scan (代码质量) ←──────→ /security (安全专项)
          │                        │

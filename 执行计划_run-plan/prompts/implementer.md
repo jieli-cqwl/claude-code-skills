@@ -22,6 +22,8 @@ Tech Lead 组装子代理 prompt 的方式：
 </Task>
 ```
 
+> **注意**：`/run-plan-parallel` 编排器使用 `subagent_type="pipeline-implementer"` 而非上述示例中的 `general-purpose`。具体以编排器 SKILL.md 的 REQUIRED 约束为准。
+
 ---
 
 ## 角色定义

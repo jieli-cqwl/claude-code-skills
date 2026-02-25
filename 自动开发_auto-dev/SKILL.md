@@ -3,7 +3,7 @@ name: auto-dev
 command: auto-dev
 user_invocable: true
 description: |
-  全流程自动开发编排。依次触发 SubAgent 完成 design → plan → run-plan → check → qa 全流程。
+  全流程自动开发编排。依次触发 SubAgent 完成 design → plan → run-plan/run-plan-parallel → check → qa 全流程。
   Use when: 一键自动化完整开发流程。
 ---
 
@@ -55,9 +55,19 @@ Plan 评审循环（最多 3 轮）:
 
 ### 阶段 2：执行交付（Implement-Check 循环）
 
+#### 执行模式路由（步骤 7 之前）
+
+分析 handoff_plan.md 的 DAG 结构，选择执行模式：
+
+| 条件 | 路由 | 说明 |
+|------|------|------|
+| Tasks <= 3 | /run-plan（串行） | 小任务串行更简单可靠 |
+| Tasks > 3 且有并行候选组（同 Layer 无 shared_files 交集的 >= 2 Tasks） | /run-plan-parallel（并行） | 大任务并行提效 |
+| Tasks > 3 但全链式依赖 | /run-plan（串行） | 无并行机会 |
+
 ```
 Implement-Check 循环（最多 3 轮）:
-  7. /run-plan → pipeline-implementer 输出 handoff_run.md
+  7. 按路由结果执行 /run-plan 或 /run-plan-parallel → 输出 handoff_run.md
   8. /check → pipeline-checker 输出 handoff_check.md
      - 全部 PASS → 进入 QA
      - 有 FAIL → /fix 修复 → 回到步骤 7
@@ -106,7 +116,7 @@ UNATTENDED_MODE=true 时：跳过上述确认等待（与 pipeline.sh 行为一�
 每个阶段完成后，在主对话中展示进度：
 
 ```
-[auto-dev] 进度: design(DONE) -> plan(DONE) -> run-plan(IN PROGRESS) -> check -> qa
+[auto-dev] 进度: design(DONE) -> plan(DONE) -> run-plan[-parallel](IN PROGRESS) -> check -> qa
 当前阶段: 执行开发（Task 3/5）
 ```
 

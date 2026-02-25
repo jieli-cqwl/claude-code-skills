@@ -259,7 +259,7 @@ users = session.query(User).options(joinedload(User.posts)).all()
 ```
 /clarify → /explore → /design → /plan
                                    ↓
-                        /run-plan (开发)
+                        /run-plan[/run-plan-parallel] (开发)
                                    ↓
                    ┌───────────────┼───────────────┐
                    ↓               ↓               ↓

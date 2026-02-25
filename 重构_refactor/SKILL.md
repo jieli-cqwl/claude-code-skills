@@ -102,7 +102,7 @@ Phase 2: 并行重构建议（10 Agent）
     ↓ 等待所有 Agent 完成
 Phase 3: 汇总计划（串行）
     ↓
-交给 /run-plan 执行
+交给 /run-plan 或 /run-plan-parallel 执行
 ```
 
 ---
@@ -234,7 +234,7 @@ Phase 3: 汇总计划（串行）
     ↓
 /refactor（重构）← 当前（自动路由到语言专属 skill）
     ↓ 输出重构计划
-/run-plan（执行计划）
+/run-plan[/run-plan-parallel]（执行计划）
     ↓
 /check（开发检查）
     ↓

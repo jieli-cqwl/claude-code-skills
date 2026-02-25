@@ -75,7 +75,7 @@ agent: pipeline-planner
 **`shared_files` 字段说明**：
 - 含义：该 Task 修改的文件中，可能被其他 Task 也修改的文件列表
 - 填写规则：planner 在拆分任务时，对比各 Task 的文件列表，将交叉文件标注到 `shared_files`
-- 用途：run-plan 用此字段判断两个 Task 是否存在文件冲突，决定是否可以并行执行
+- 用途：run-plan-parallel 用此字段判断两个 Task 是否存在文件冲突，决定是否可以并行执行
 - 无交叉文件时为空列表 `[]`
 
 ### Design 评审输出

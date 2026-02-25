@@ -40,7 +40,7 @@ description: |
 **下游依赖**：
 - `/design` 依赖此文档
 - `/plan` 依赖此文档
-- `/run-plan`（Implementer TDD）依赖此文档
+- `/run-plan` 或 `/run-plan-parallel`（Implementer TDD）依赖此文档
 - `/qa` 依赖此文档
 
 ---
@@ -380,7 +380,7 @@ description: |
 - 反例总数: X 个
 - 复杂度: [中等/复杂]
 - 文档指纹: DOC-HASH-XXXXXXXX
-- 单一来源声明: 此文档是整个开发流程的唯一验收标准，后续 /plan、/run-plan、/qa 必须引用，禁止重新定义
+- 单一来源声明: 此文档是整个开发流程的唯一验收标准，后续 /plan、/run-plan（或 /run-plan-parallel）、/qa 必须引用，禁止重新定义
 
 ## 修改的文件
 - 无（clarify 阶段不修改项目代码）
@@ -465,7 +465,7 @@ Handoff 文档已保存至：docs/pipeline/{feature_name}/handoff_clarify.md
 
 单一来源声明：
    此文档是整个开发流程的唯一验收标准
-   后续 /plan、/run-plan、/qa 必须引用，禁止重新定义
+   后续 /plan、/run-plan（或 /run-plan-parallel）、/qa 必须引用，禁止重新定义
    文档指纹将在 /plan 阶段自动验证，防止被意外修改
 
 下一步：

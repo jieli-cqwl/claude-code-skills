@@ -187,5 +187,5 @@ gh pr create --title "feat: xxx" --body "..."
 ```
 ✅ 分支隔离环境已创建
 
-下一步：在隔离分支中执行 /run-plan（执行计划）
+下一步：在隔离分支中执行 /run-plan 或 /run-plan-parallel（执行计划）
 ```
