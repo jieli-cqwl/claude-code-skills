@@ -1,8 +1,5 @@
 ---
 name: perf
-command: perf
-user_invocable: true
-parallel_mode: true
 description: |
   性能分析与瓶颈定位。使用 pyinstrument/py-spy/nplusone 生成火焰图和可视化报告。
   Use when: 性能慢或卡顿、优化性能、定位瓶颈、检查 N+1 查询、上线前性能验收。
@@ -28,20 +25,28 @@ description: |
 ## 执行模式
 
 ```bash
-/perf                  # 默认：pyinstrument 采样分析
-/perf quick            # 快速：热点 Top 10 (<30s)
-/perf deep             # 深度：scalene 全面分析 (CPU+内存+GPU)
-/perf n1               # N+1：检测 ORM 查询问题
-/perf memory           # 内存：memory_profiler 分析
-/perf attach <pid>     # 附加：py-spy 附加运行中进程
-/perf flame            # 火焰图：生成交互式火焰图
-/perf sql              # SQL：慢查询分析
-/perf compare          # 对比：优化前后性能对比
-/perf async            # 异步：asyncio 代码分析
-/perf baseline <target> # 基准：设定性能目标
-/perf run <command>    # 运行：分析指定命令
-/perf test <test_file> # 测试：分析测试用例
+$perf                  # 默认：pyinstrument 采样分析
+$perf quick            # 快速：热点 Top 10 (<30s)
+$perf deep             # 深度：scalene 全面分析 (CPU+内存+GPU)
+$perf n1               # N+1：检测 ORM 查询问题
+$perf memory           # 内存：memory_profiler 分析
+$perf attach <pid>     # 附加：py-spy 附加运行中进程
+$perf flame            # 火焰图：生成交互式火焰图
+$perf sql              # SQL：慢查询分析
+$perf compare          # 对比：优化前后性能对比
+$perf async            # 异步：asyncio 代码分析
+$perf baseline <target> # 基准：设定性能目标
+$perf run <command>    # 运行：分析指定命令
+$perf test <test_file> # 测试：分析测试用例
 ```
+
+---
+
+## Codex 执行约定
+
+- 默认主线程串行执行，不自动派发子 agent。
+- 仅当用户明确要求“使用子 agent/并行执行”时，才启用并行架构（8 worker）。
+- 未明确要求并行时，按串行模式执行：CPU/内存/I-O/N+1 分析 -> 汇总报告 -> 优化建议。
 
 ---
 
@@ -71,7 +76,7 @@ description: |
 ## 执行流程
 
 ```
-/perf [mode]
+$perf [mode]
     ↓
 Phase 1: 环境检测
     - 检测项目类型 (Python/Node/Java)
@@ -102,9 +107,17 @@ Phase 5: 优化建议
 
 ---
 
-## 并行架构
+## 默认执行路径（串行）
 
-### Phase 1: 并行分析（8 Agent，subagent_type=Bash）
+1. 选择目标入口并采集性能数据（CPU/内存/SQL/N+1）。
+2. 聚合热点与瓶颈，输出可视化报告。
+3. 生成可执行优化建议并给出收益预估。
+
+---
+
+## 并行架构（可选）
+
+### Phase 1: 并行分析（8 Agent，角色=worker）
 
 同时启动以下 8 个分析任务：
 
@@ -121,7 +134,7 @@ Phase 5: 优化建议
 
 **等待所有 Agent 完成后继续。**
 
-### Phase 2: 并行优化建议（8 Agent，subagent_type=general-purpose）
+### Phase 2: 并行优化建议（8 Agent，角色=worker）
 
 各 Agent 为发现的问题生成优化方案：
 
@@ -157,13 +170,13 @@ Phase 5: 优化建议
 
 **单 Agent 失败处理**：
 - 记录失败原因和堆栈
-- 其他 Agent 继续执行
-- 最终报告中标注"[分析名称] 分析失败：[原因]"
+- 立即终止并行分析并输出 `FAIL`
+- 禁止用部分分析结果生成最终结论
 
 **超时处理**：
 - 单个分析任务超时时间：5 分钟
-- 超时后终止该 Agent，记录已收集的部分数据
-- 报告中标注"[分析名称] 分析超时，数据可能不完整"
+- 超时后终止当前流程并输出 `FAIL`
+- 记录超时任务，修复后重跑
 
 **全部失败处理**：
 - 如果所有 Agent 都失败，输出环境诊断信息
@@ -257,21 +270,21 @@ users = session.query(User).options(joinedload(User.posts)).all()
 ## 与其他 Skills 的关系
 
 ```
-/prd → /explore → /design → /plan
+$prd → 项目探索（可选）→ $design → $plan
                                    ↓
-                        /run-plan[/run-plan-parallel] (开发)
+                        $run-plan[$run-plan-parallel] (开发)
                                    ↓
                    ┌───────────────┼───────────────┐
                    ↓               ↓               ↓
-               /security       /perf ← 当前     /scan
+               $security       $perf ← 当前     $scan
                    │               │               │
                    └───────────────┼───────────────┘
                                    ↓
-                                /check
+                                $check
                                    ↓
-                                 /qa
+                                 $qa
                                    ↓
-                                /ship
+                                $ship
 ```
 
 ---
@@ -327,5 +340,5 @@ mkdir -p docs/性能分析
 🎯 下一步:
 1. 优先解决 Top 3 热点（预计提升 XX%）
 2. 修复 N+1 查询问题
-3. 优化后重新运行 /perf 验证效果
+3. 优化后重新运行 $perf 验证效果
 ```

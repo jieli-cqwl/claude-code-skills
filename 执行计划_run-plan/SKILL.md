@@ -30,7 +30,7 @@ agent: pipeline-implementer
 - 严格 TDD：写测试 -> 运行确认失败（红） -> 写实现 -> 运行确认通过（绿）
 - 一任务一 commit：message 格式 `feat(Task-N): 描述`，每 commit 必须包含测试
 - 遇到无法完成的任务，标注 BLOCKED + 原因，不假装完成
-- 按 Design 文档的接口定义实现，不自行调整接口
+- 按 Design 文档（handoff_design + MOD）的接口定义实现，不自行调整接口
 
 ---
 
@@ -152,7 +152,8 @@ Implementer 在执行前，先评审 Plan 文档。
 | 3 | AC 可测性 | 无法翻译为 assert |
 | 4 | 依赖拓扑 | 存在循环或顺序矛盾 |
 | 5 | 任务粒度 | 单任务改动 > 5 文件 |
-| 6 | 设计一致性 | 与 handoff_design.md 矛盾 |
+| 6 | 设计一致性 | 与 handoff_design.md 或对应 MOD 矛盾 |
+| 7 | design_ref 完整性 | 存在 MOD 文件但 Task 缺失 design_ref 或引用无效 |
 
 #### Plan 评审偏差对抗
 
@@ -224,28 +225,30 @@ REQUIRED：每个 Task 完成后、标记为 DONE 前，执行以下自检：
 
 ## 前置条件
 
-以下文件**必须存在**（双格式兼容）：
+以下文件**必须存在**：
 
 - `docs/pipeline/{feature}/handoff_plan.md` 必须存在
 - `docs/pipeline/{feature}/handoff_design.md` 必须存在
+- `docs/pipeline/{feature}/design/MOD-*.md` 可选（存在时必须按 Task.design_ref 读取）
 
 如不存在，请先执行 `/plan`。
 
-> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/master.md` 或 `docs/{feature}/handoff_clarify.md` 中是否包含等价的计划与设计内容。
+> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/master.md` 中是否包含等价的计划与设计内容。
 
 ---
 
 ## 执行流程
 
 ### 执行模式
-1. 读取 `docs/pipeline/{feature}/handoff_plan.md` + `handoff_design.md`
+1. 读取 `docs/pipeline/{feature}/handoff_plan.md` + `handoff_design.md`（+ `design/MOD-*.md` 如存在）
 2. 按 Task 拓扑顺序逐个执行（严格 TDD：红-绿-重构）
-3. 每个 Task 完成一个 commit：`feat(Task-N): 描述`
-4. 输出到 `docs/pipeline/{feature}/handoff_run.md`
+3. 若 Task 含 `design_ref` 且存在 MOD 文件，先读取对应 MOD 的实施约束再实现
+4. 每个 Task 完成一个 commit：`feat(Task-N): 描述`
+5. 输出到 `docs/pipeline/{feature}/handoff_run.md`
 
 ### Plan 评审模式
 1. 读取 `docs/pipeline/{feature}/handoff_plan.md`
-2. 以"文件路径是否存在、AC 是否可测、依赖是否合理"的视角审视
+2. 以"文件路径是否存在、AC 是否可测、依赖是否合理、design_ref 是否有效"的视角审视
 3. 输出 PLAN_OK 或 PLAN_ISSUE
 4. 输出到 `docs/pipeline/{feature}/review_plan_N.md`
 
@@ -319,6 +322,7 @@ REVIEW: PLAN_ISSUE
 | 4 | 依赖拓扑 | ISSUE | Task-2/3 顺序矛盾 |
 | 5 | 任务粒度 | OK | 最大改动 4 文件 |
 | 6 | 设计一致性 | OK | 与 design 一致 |
+| 7 | design_ref 完整性 | ISSUE | Task-4 缺失 design_ref |
 ```
 
 ### 坏的 Plan 评审输出

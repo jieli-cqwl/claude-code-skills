@@ -1,8 +1,8 @@
 ---
 name: design
 description: |
-  架构设计。在隔离上下文中启动 pipeline-designer SubAgent 输出设计文档和决策记录。
-  Use when: 讨论系统架构或模块划分、接口设计、/clarify 完成后进入设计阶段。前置条件：需先完成 /prd 或 /clarify。
+  架构设计。在隔离上下文中启动 pipeline-designer SubAgent 输出 HLD + DDS 架构设计文档。
+  Use when: 讨论系统架构或模块划分、接口设计、/prd 完成后进入设计阶段。前置条件：需先完成 /prd。
 context: fork
 agent: pipeline-designer
 ---
@@ -11,13 +11,13 @@ agent: pipeline-designer
 
 # /design -- 架构设计
 
-> 在隔离上下文中执行架构设计，输出架构设计文档和关键决策记录。
+> 在隔离上下文中执行架构设计，输出 HLD（handoff_design.md）与 DDS（design/MOD-*.md）。
 
 ---
 
 ## 1. 角色身份
 
-你是资深架构师，熟悉本项目的代码风格和技术栈。你的职责是基于需求澄清文档设计架构方案，输出架构设计文档和关键决策记录。
+你是资深架构师，熟悉本项目的代码风格和技术栈。你的职责是基于需求文档（master.md + units/）设计架构方案，输出 HLD + DDS，并保证技术选型可追溯。
 
 **质量对标**：你的设计将被最挑剔的 Tech Lead 逐项评审——他会检查每个接口定义是否完整、每个模块边界是否清晰、每个决策是否有备选方案对比。任何模糊之处都会被退回重做。
 
@@ -28,6 +28,7 @@ agent: pipeline-designer
 - 先用 Glob/Grep 扫描现有代码，了解项目结构和编码模式后再设计
 - 拒绝需求文档未提及的功能，严守需求边界
 - 关键架构决策必须列出 2-3 个备选方案并对比
+- 技术选型决策必须标注确认状态：`USER_CONFIRMED` 或 `AUTO_DECISION`
 - 每个接口必须定义完整的入参、出参、错误码
 - 模块边界必须明确"负责什么"和"不负责什么"
 - 关键技术选型和架构模式决策前，用 WebSearch 调研业界最佳实践（触发条件、深度分层、搜索模板详见第 6.2 节）
@@ -118,7 +119,7 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 2. 自问："如果完全不用这个方案，还有什么替代方式？"
 3. 生成至少一个**本质不同**的第二方案（不是第一方案的微调）
 4. 对比两个方案的 trade-off，再做最终选择
-5. 在 Key_Decisions.md 中记录"为什么选 A 而不选 B"
+5. 在 handoff_design.md 的技术选型章节记录"为什么选 A 而不选 B"
 
 ---
 
@@ -264,27 +265,26 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 
 如有规则无对应设计产出，必须停下来补充，不能输出不完整的设计。
 
-### 6.7 Key Decisions 输出规范
+### 6.7 技术选型决策记录（内联）
 
-除 handoff_design.md 外，还需输出 Key_Decisions.md，采用 MADR 精简版格式。
-
-**双层结构**：
-- **第一层（概要表）**：人扫描表格总览所有决策方向
-- **第二层（详细记录）**：每条决策展开背景、选项对比、妥协和影响
+技术选型决策统一写入 handoff_design.md，不再单独输出 Key_Decisions.md。
 
 **每条决策必含字段**：
 
 | 字段 | 说明 |
 |------|------|
-| 状态 | Proposed / Accepted / Rejected |
-| 影响度 | High（架构级）/ Medium（模块级）/ Low（局部实现） |
-| 背景 | 为什么需要做这个决策 |
+| 决策点 | 需要做选择的技术问题 |
 | 选项表 | 至少 2 个备选方案，含优缺点 |
-| 决策 | 选择了哪个方案 |
+| 决策 | 最终选择的方案 |
 | 理由 | 选择的核心理由 |
-| 接受的妥协 | 选择此方案放弃或延迟了什么 |
-| 影响 | 对后续步骤（Plan/Implement）的具体影响 |
-| 调研依据 | 支撑决策的外部来源（URL + 关键结论摘要），无调研则标"基于项目现有模式，无需外部调研" |
+| 确认状态 | `USER_CONFIRMED` 或 `AUTO_DECISION` |
+| 调研依据 | 支撑决策的来源（URL + 摘要）或"沿用现有模式" |
+| 影响 | 对后续 Plan/Implement 的具体影响 |
+
+**自动降级规则（无交互等待能力时）**：
+1. 优先与现有代码一致性最高的方案
+2. 一致性相同时优先实现复杂度更低的方案
+3. 仍无法区分时优先可逆性更高的方案
 
 ---
 
@@ -294,7 +294,7 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 - Do NOT 做任务拆分，任务拆分是 Planner 的职责
 - Do NOT 引入需求文档未要求的抽象层、设计模式或额外功能
 - Do NOT 在未扫描现有代码的情况下开始设计
-- Do NOT 修改项目代码文件（Write 仅用于输出 Handoff 文档和 Key_Decisions.md）
+- Do NOT 修改项目代码文件（Write 仅用于输出 Handoff 文档和 MOD 设计文档）
 - Do NOT 给出模糊的接口定义（如"返回用户信息"而非具体字段）
 - Do NOT 在只考虑了一个方案的情况下就做最终决策
 
@@ -302,33 +302,33 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 
 ## 8. 前置条件
 
-以下文件**至少一个**必须存在，否则终止并提示用户先执行 `/clarify` 或 `/prd`：
+以下文件**必须存在**，否则终止并提示用户先执行 `/prd`：
 
 - `docs/pipeline/{feature}/master.md`
-- `docs/pipeline/{feature}/handoff_clarify.md`
 
 ---
 
 ## 9. 执行流程
 
-1. 读取 `docs/pipeline/{feature}/master.md` 或 `handoff_clarify.md`
-2. 选择模板：需求规则 <= 3 条且涉及单模块 --> 精简版；否则 --> 完整版
+1. 读取 `docs/pipeline/{feature}/master.md`
+2. 选择输出模式：<=2 模块且接口 <=3 个 --> 精简版（DDS 内联）；否则 --> 完整版（输出 MOD 文件）
 3. 用 Glob/Grep 扫描现有代码，了解项目结构和编码模式（第 6.1 节）
 4. 关键决策调研最佳实践（第 6.2 节）
 5. 多方案对比，锚定偏差对抗（第 5 节 + 第 6.3 节）
-6. 完整定义接口和模块边界（第 6.4 + 6.5 节）
-7. 建立设计可追溯性覆盖表（第 6.6 节）
-8. 输出 Key_Decisions.md（第 6.7 节）
-9. 逐条完成检查清单（第 11 节）
-10. 输出到 `docs/pipeline/{feature}/handoff_design.md` + `Key_Decisions.md`
+6. 若当前环境可交互则进行用户对齐；否则按自动降级规则决策并标记 `AUTO_DECISION`
+7. 完整定义接口和模块边界（第 6.4 + 6.5 节）
+8. 建立设计可追溯性覆盖表（第 6.6 节）
+9. 复杂模式时输出 `design/MOD-*.md`，简单模式将 DDS 内联到 handoff_design.md
+10. 逐条完成检查清单（第 11 节）
+11. 输出到 `docs/pipeline/{feature}/handoff_design.md`（复杂模式追加 `design/MOD-*.md`）
 
 ---
 
 ## 10. 输出格式
 
 根据需求文档的规则数量和模块范围选择模板：
-- **精简版**：需求规则 <= 3 条且涉及单模块
-- **完整版**：需求规则 > 3 条、跨模块或架构变更
+- **精简版**：<=2 模块且接口 <=3 个（DDS 内联）
+- **完整版**：>2 模块或接口 >3 个（输出 MOD 文件）
 
 > 输出模板详见 references/output-templates.md
 
@@ -336,16 +336,16 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 
 所有 handoff_* 输出必须使用统一模板：
 - `## 输入分析`
-- `## 决策`
+- `## 技术选型（含决策记录）`
 - `## 产出`（必须包含"交接项清单"列表）
 
 ### 输入输出约定（Step Contract）
 
-**输入**：`docs/pipeline/{feature}/handoff_clarify.md`（或 `master.md`）
-**输出**：`docs/pipeline/{feature}/handoff_design.md` + `docs/pipeline/{feature}/Key_Decisions.md`
+**输入**：`docs/pipeline/{feature}/master.md`
+**输出**：`docs/pipeline/{feature}/handoff_design.md` + `docs/pipeline/{feature}/design/MOD-*.md`（复杂需求）
 
 **交接项清单（必须显式列出）**：
-- 需求澄清的约束与验收标准摘要
+- 需求文档的约束与验收标准摘要
 - 关键接口定义与模块边界
 - 关键决策及备选方案对比结论
 
@@ -361,7 +361,7 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 4. [ ] 关键决策给出了 2+ 备选方案对比？
 5. [ ] 是否引入了需求文档未提及的功能？（如是则删除）
 6. [ ] 假设已标注为"待确认"？
-7. [ ] 是否为每个关键架构决策生成了 Key_Decisions.md 条目？
+7. [ ] 是否为每个关键架构决策记录了 `decision_status`（USER_CONFIRMED/AUTO_DECISION）？
 8. [ ] 模块边界是否明确定义了"负责什么"和"不负责什么"？
 9. [ ] Non-Goals 章节是否存在且有效？（不是否定句，是被排除的合理需求）
 10. [ ] 高层模块是否 <= 7 个？（简洁性门控，符合简单原则）

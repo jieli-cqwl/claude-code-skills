@@ -1,7 +1,7 @@
 ---
 name: check
 description: |
-  开发检查。在隔离上下文中启动 pipeline-checker SubAgent 做五维代码质量检查。
+  开发检查。在隔离上下文中启动 pipeline-checker SubAgent 做五维代码质量检查与设计约束合规核查。
   Use when: 检查代码质量、开发完成准备验证。前置条件：需先完成 /run-plan 或 /run-plan-parallel。
 context: fork
 agent: pipeline-checker
@@ -11,7 +11,7 @@ agent: pipeline-checker
 
 # /check -- 开发检查
 
-> 在隔离上下文中执行五维代码质量检查，以对抗性思维找出问题。
+> 在隔离上下文中执行五维代码质量检查，并追加设计约束合规专项核查。
 
 ---
 
@@ -30,9 +30,9 @@ agent: pipeline-checker
 - **有罪推定**：假设代码有漏洞，你的任务是找到它
 - **五维全检**：测试、Lint、类型检查、代码质量规则、AC 覆盖，缺一不可
 - **判定权分离**：你输出 PASS/FAIL 结论与证据，但最终判定以 pipeline.sh 的测试结果为准
-- **新增三类扫描**：文档同步、消息 key、跨模块常量（按 reference/文档规范.md、消息配置规范.md、硬编码治理规范.md）
+- **新增四类专项核查**：文档同步、消息 key、跨模块常量、设计约束合规
 - **客观证据**：每个结论必须附带命令输出、文件路径:行号或具体数值
-- **结论二值**：只有 PASS 和 FAIL，五维全 PASS 且新增扫描全 PASS 才是 PASS
+- **结论二值**：只有 PASS 和 FAIL，五维全 PASS 且专项核查全 PASS 才是 PASS
 - **只描述不修复**：只描述问题，不修改任何代码文件
 
 ---
@@ -132,9 +132,9 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
 | Task-2 | AC1: POST /users 返回 201 | PASS | curl 测试确认 |
 ```
 
-### 3.3 新增三类扫描
+### 3.3 新增四类专项核查
 
-在五维检查之外，额外执行以下三类扫描。每类同样必须给出客观证据：
+在五维检查之外，额外执行以下专项核查。每类同样必须给出客观证据：
 
 #### 扫描 1：文档同步（依据 reference/文档规范.md）
 
@@ -166,6 +166,16 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
   FAIL: src/services/user.py 跨模块导入 adapters 常量（路径证据）
 ```
 
+#### 扫描 4：设计约束合规（依据 handoff_design.md + design/MOD-*.md）
+
+- 检查实现是否违反 design 明确的实施约束（错误码、状态流、边界条件、禁用行为）
+- 若存在 `design/MOD-*.md`，优先按 MOD 约束逐条核查
+
+```
+设计约束合规:
+  FAIL: Task-3 未返回 MOD-002 约束要求的 error_code（src/api/users.py:92）
+```
+
 ### 3.4 客观证据要求
 
 每项检查结果必须附带客观证据，禁止主观描述。
@@ -192,8 +202,8 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
 **判定规则**：
 
 ```
-偏差自检通过 + 五维全 PASS + 三类新增扫描全 PASS -> RESULT: PASS
-任何一维 FAIL 或 任一新增扫描 FAIL -> RESULT: FAIL
+偏差自检通过 + 五维全 PASS + 四类专项核查全 PASS -> RESULT: PASS
+任何一维 FAIL 或 任一专项核查 FAIL -> RESULT: FAIL
 偏差自检发现问题 -> 回到对应维度重新检查
 ```
 
@@ -279,7 +289,7 @@ FAIL 结果必须附带：
 
 1. 读取 `docs/pipeline/{feature}/handoff_plan.md` + `handoff_run.md`
 2. 五维逐一检查：测试、Lint、类型检查、代码质量规则、AC 覆盖
-3. 新增三类扫描：文档同步、消息 key、跨模块常量
+3. 新增四类专项核查：文档同步、消息 key、跨模块常量、设计约束合规
 4. 每个维度/扫描附带客观证据（命令输出、文件路径:行号、数值）
 5. 完成偏差自检（4 步骤）
 6. 输出到 `docs/pipeline/{feature}/handoff_check.md`
@@ -317,7 +327,7 @@ AC 覆盖说明: <文字>
 #### 5. AC 覆盖
 [逐条 AC 核对表格]
 
-### 新增三类扫描
+### 新增四类专项核查
 
 #### 6. 文档同步（依据 reference/文档规范.md）
 [涉及的文档更新/归档清单 + 证据]
@@ -327,6 +337,9 @@ AC 覆盖说明: <文字>
 
 #### 8. 跨模块常量（依据 reference/硬编码治理规范.md）
 [跨模块常量提升/校验清单 + 导入路径证据]
+
+#### 9. 设计约束合规（依据 handoff_design.md + design/MOD-*.md）
+[实施约束核查清单 + 证据]
 
 ### 偏差自检
 - 确认偏差：无 / 发现 -> [...]
@@ -344,7 +357,7 @@ RESULT: PASS | FAIL
 - AC 覆盖说明
 - 发现的问题清单（含文件:行号或命令输出）
 
-<metadata>{"status": "PASS|FAIL", "test_passed": N, "test_failed": N, "lint_warnings": N, "quality_issues": N, "doc_sync": "PASS|FAIL", "message_keys": "PASS|FAIL", "cross_module_constants": "PASS|FAIL"}</metadata>
+<metadata>{"status": "PASS|FAIL", "test_passed": N, "test_failed": N, "lint_warnings": N, "quality_issues": N, "doc_sync": "PASS|FAIL", "message_keys": "PASS|FAIL", "cross_module_constants": "PASS|FAIL", "design_constraints": "PASS|FAIL"}</metadata>
 ```
 
 ---
@@ -377,6 +390,7 @@ RESULT: PASS | FAIL
 6. 文档同步: PASS（docs/API/接口_用户.md 已更新）
 7. 消息 key: PASS（无新增硬编码消息）
 8. 跨模块常量: PASS（无跨模块导入）
+9. 设计约束合规: PASS（无违背 MOD 约束）
 
 偏差自检:
 - 确认偏差：无

@@ -1,8 +1,5 @@
 ---
 name: overview
-command: overview
-user_invocable: true
-parallel_mode: true
 description: |
   项目概览。用产品视角解释项目用途，用架构图展示模块关系，指出新手应先看的文件。
   Use when: 了解项目全貌、接手新项目、介绍项目结构。
@@ -14,6 +11,14 @@ description: |
 > **驱动**：这位 Staff Engineer 需要在最短时间内建立对项目的全局认知，你的介绍质量直接决定他能否快速上手
 > **标准**：介绍完毕后，他应该能回答：这个项目解决什么问题、核心模块如何协作、从哪里开始深入
 > **输出**：生成 `docs/项目概览.md` 文档，后续可随时查阅
+
+---
+
+## Codex 执行约定
+
+- 默认主线程串行执行，不自动派发子 agent。
+- 仅当用户明确要求“使用子 agent/并行执行”时，才启用并行信息收集（8 worker）。
+- 未明确要求并行时，按串行模式执行：项目扫描 -> 文档生成 -> 用户确认。
 
 ---
 
@@ -40,11 +45,19 @@ description: |
 
 ---
 
-## 并行架构
+## 默认执行路径（串行）
+
+1. 串行扫描项目结构、技术栈、关键入口与模块边界。
+2. 生成 `docs/项目概览.md`。
+3. 与用户确认准确性并按反馈更新。
+
+---
+
+## 并行架构（可选）
 
 > **性能优化**：通过 8 Agent 并行信息收集，大幅提升项目扫描效率
 
-### Phase 1: 并行信息收集（8 Agent，subagent_type=Explore）
+### Phase 1: 并行信息收集（8 Agent，角色=explorer）
 
 > 8 个 Agent 的详细分工表、启动指令和错误处理策略详见 `references/agent-assignments.md`
 
@@ -311,14 +324,14 @@ graph TB
 ## 与其他 Skills 的关系
 
 ```
-/overview（项目概览）← 接手新项目时首先使用
+$overview（项目概览）← 接手新项目时首先使用
     ↓
 [日常开发]
     ↓
-/prd → /explore → /design → /plan → /run-plan 或 /run-plan-parallel
+$prd → 项目探索（可选）→ $design → $plan → $run-plan 或 $run-plan-parallel
 ```
 
-`/overview` 是项目接手的第一步，生成的文档可作为后续开发的参考资料。
+`$overview` 是项目接手的第一步，生成的文档可作为后续开发的参考资料。
 
 ---
 

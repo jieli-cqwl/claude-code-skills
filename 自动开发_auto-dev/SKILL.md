@@ -24,7 +24,7 @@ description: |
 
 ## 前置条件
 
-1. `docs/pipeline/{feature}/master.md`（由 `/prd` 生成）或 `docs/pipeline/{feature}/handoff_clarify.md`（由 `/clarify` 生成）必须存在。请先执行 `/prd` 或 `/clarify` 完成需求文档化。
+1. `docs/pipeline/{feature}/master.md`（由 `/prd` 生成）必须存在。请先执行 `/prd` 完成需求文档化。
 2. 用户确认需求后说"开始"或"执行"。
 3. 若走 Plan Ready 快速入口，需额外满足：
    - `handoff_design.md` + `handoff_plan.md` 已存在
@@ -40,7 +40,7 @@ ultrathink
 
 ```
 Fast Path:
-  A. 检查 handoff_clarify.md / handoff_design.md / handoff_plan.md 均存在
+  A. 检查 master.md / handoff_design.md / handoff_plan.md 均存在
   B. 标记 design=SKIPPED, plan=SKIPPED
   C. 直接进入步骤 7（/run-plan 或 /run-plan-parallel）
 ```
@@ -110,7 +110,7 @@ QA-Fix 循环（最多 10 轮）:
 
 | 检查点 | 时机 | 展示内容 |
 |--------|------|---------|
-| Design 确认 | Design 评审通过后 | handoff_design.md 摘要 + Key_Decisions.md |
+| Design 确认 | Design 评审通过后 | handoff_design.md 摘要（技术选型/决策状态 + MOD 索引） |
 | Plan 确认 | Plan 评审通过后 | handoff_plan.md 的任务清单和依赖关系 |
 | QA >= 5 轮 | QA-Fix 循环达到 5 轮 | 历次修复记录和当前 FAIL 项 |
 
@@ -151,4 +151,4 @@ Plan Ready 快速入口展示：
 - pipeline.sh 提供更强的加固能力（超时/费用/锁），适合无人值守场景
 - 与脚本编排对齐：使用单版本命令 `bash ~/.claude/pipeline.sh start <feature> <simple|complex>`，随后循环 `run-step`，最后 `finalize`
 - 统一入口层不再接受旧版环境变量式流程参数，避免误触发历史行为
-- 双格式兼容：`/prd` 输出 `master.md + units/`，`/clarify` 输出 `handoff_clarify.md`，下游阶段自动检测可用格式
+- 统一格式：`/prd` 输出 `master.md + units/`，下游阶段按单一格式读取

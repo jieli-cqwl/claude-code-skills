@@ -3,14 +3,14 @@
 ## Context
 
 **问题**：
-1. `/clarify` 缺少产品经理思维——只输出离散 Rules，缺少业务流程和背景分析
+1. `/prd` 缺少产品经理思维——只输出离散 Rules，缺少业务流程和背景分析
 2. 现有文档拆解（`context_gate.sh`）是事后机械拆分，语义完整性不可控
 3. 能力散落三层（User Skill + Agent + Methodology Skill），修改一个方法论要在 2-3 处同步
-4. Pipeline runtime 硬编码 `handoff_clarify.md`，无法接入新格式
+4. Pipeline runtime 硬编码 `master.md`，无法接入新格式
 
 **目标**：
 1. 新建 `/prd` Skill 输出 `master.md + units/` 格式
-2. Runtime 支持双格式（master.md 或 handoff_clarify.md）
+2. Runtime 支持双格式（master.md 或 master.md）
 3. **Skill = 完整能力**（含方法论），**Agent = 薄上下文包装**
 4. 删除独立 Methodology Skills
 
@@ -59,8 +59,8 @@
 
 | # | 文件 | 操作 |
 |---|------|------|
-| 1 | `~/.claude/skills/产品需求_prd/SKILL.md` | 新建 → 后续重构（输出格式改为条件引用 output-simple/output-complex，清理 /clarify 引用） |
-| 2 | `~/.claude/skills/产品需求_prd/references/product-methodology.md` | 新建 → 后续修改（删除"与 /clarify 的关系"章节） |
+| 1 | `~/.claude/skills/产品需求_prd/SKILL.md` | 新建 → 后续重构（输出格式改为条件引用 output-simple/output-complex，清理 /prd 引用） |
+| 2 | `~/.claude/skills/产品需求_prd/references/product-methodology.md` | 新建 → 后续修改（删除"与 /prd 的关系"章节） |
 | 3 | `~/.claude/skills/产品需求_prd/references/unit-spec.md` | 新建 → 后续修改（标题改为"与旧格式"） |
 | 4 | `~/.claude/skills/产品需求_prd/references/examples.md` | 新建 → **已删除**（内容拆分到 output-simple/output-complex） |
 | 4a | `~/.claude/skills/产品需求_prd/references/output-simple.md` | 新建（简单模式输出规范） |
@@ -70,8 +70,8 @@
 
 | # | 文件 | 改动要点 |
 |---|------|---------|
-| 5 | `~/.codex/bin/pipeline-runtime/entry.sh` | `cmd_start()`: 检查 master.md OR handoff_clarify.md |
-| 6 | `~/.codex/bin/pipeline-runtime/steps/contracts.sh` | `step_required_input()`: 优先返回 master.md，回退 handoff_clarify.md |
+| 5 | `~/.codex/bin/pipeline-runtime/entry.sh` | `cmd_start()`: 检查 master.md OR master.md |
+| 6 | `~/.codex/bin/pipeline-runtime/steps/contracts.sh` | `step_required_input()`: 优先返回 master.md，回退 master.md |
 | 7 | `~/.codex/bin/pipeline-runtime/steps/context_gate.sh` | `context_prepare_for_step()`: master.md 存在时跳过脚本拆解 |
 
 ### Phase 3：Skill 能力吸收（6 个 Skill 重写）
@@ -145,22 +145,22 @@
 | 架构设计_design | 2（精简版+完整版） | `references/output-templates.md` |
 | 写计划_plan | 2（Plan输出+Design评审输出） | `references/output-templates.md` |
 | 执行计划_run-plan | 2（执行输出+Plan评审输出） | `references/output-templates.md` |
-| 测试验收_qa | 2（master.md格式+clarify格式） | `references/output-templates.md` |
+| 测试验收_qa | 2（master.md格式+prd格式） | `references/output-templates.md` |
 
 不提取：开发检查_check（单一输出格式）、修复_fix（单一输出格式）。
 
-### Phase 10：删除 clarify + product Skills
+### Phase 10：删除 legacy + product Skills
 
 **删除目录（4 个）**：
 
 | 目录 | 侧 |
 |------|-----|
-| `~/.claude/skills/需求澄清_clarify/` | Claude |
+| `~/.claude/skills/产品需求_prd/` | Claude |
 | `~/.claude/skills/产品设计_product/` | Claude |
-| `~/.codex/skills/需求澄清_clarify/` | Codex |
+| `~/.codex/skills/产品需求_prd/` | Codex |
 | `~/.codex/skills/产品设计_product/` | Codex |
 
-**引用更新（`/clarify` → `/prd`）**：8 个 SKILL.md 文件中的 `/clarify` 命令引用更新。保留 `handoff_clarify.md` 文件名引用（双格式向后兼容）。
+**引用更新（统一到 `/prd`）**：8 个 SKILL.md 文件中的命令引用已标准化。保留 `master.md` 文件名引用（双格式向后兼容）。
 
 ---
 
@@ -184,7 +184,7 @@
 
 | Phase | 状态 | 说明 |
 |-------|------|------|
-| Phase 1 | ✅ 完成 | /prd Skill 4 个新文件已创建；遗留修复完成：删除 examples.md，新建 output-simple.md + output-complex.md（按模式拆分输出规范），SKILL.md 输出格式重构为条件引用，product-methodology.md 删除 /clarify 关系章节，unit-spec.md 标题修正，Codex 同步完成 |
+| Phase 1 | ✅ 完成 | /prd Skill 4 个新文件已创建；遗留修复完成：删除 examples.md，新建 output-simple.md + output-complex.md（按模式拆分输出规范），SKILL.md 输出格式重构为条件引用，product-methodology.md 删除 /prd 关系章节，unit-spec.md 标题修正，Codex 同步完成 |
 | Phase 2 | ✅ 完成 | Runtime 3 个文件已修改，双格式适配完成 |
 | Phase 3 | ✅ 完成 | 6 个 Skill 已吸收方法论重写 |
 | Phase 4 | ✅ 完成 | 6 Agent 已瘦身至 ~25 行 |
@@ -193,7 +193,7 @@
 | Phase 7 | ✅ 完成 | Codex Agent 同步（含 skills 字段）+ 8 个 Codex Skills + 4 个 references 同步 + 设计文档/学习笔记清理 |
 | Phase 8 | ✅ 完成 | 12 个 Agent 文件（Claude 6 + Codex 6）添加 `skills:` 字段 |
 | Phase 9 | ✅ 完成 | 4 个 Skill 的输出模板提取到 `references/output-templates.md` + Codex 同步 |
-| Phase 10 | ✅ 完成 | 4 个目录删除（clarify + product 双侧）+ 8 个 Skill 引用更新 `/clarify` → `/prd` + Codex 同步 |
+| Phase 10 | ✅ 完成 | 4 个目录删除（prd + product 双侧）+ 8 个 Skill 引用更新 `/prd` → `/prd` + Codex 同步 |
 
 ---
 
@@ -207,5 +207,5 @@
 | 4 | Agent 瘦身 | 每个 Agent ≤30行，含 `skills:` 字段 |
 | 5 | Skill 完整性 | 每个 Skill 包含：角色+方法论+工作流+约束+输出格式 |
 | 6 | 全链路新格式 | `/prd` → `/design` → 确认正常读取 master.md |
-| 7 | 全链路旧格式 | 旧 `handoff_clarify.md` → `/design` → 确认向后兼容 |
+| 7 | 全链路旧格式 | 旧 `master.md` → `/design` → 确认向后兼容 |
 | 8 | QA 双格式 | `/prd` → ... → `/qa` → 确认逐 Unit 验证 |

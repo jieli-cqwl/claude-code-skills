@@ -1,7 +1,5 @@
 ---
 name: status
-command: status
-user_invocable: true
 description: |
   Pipeline 进度查询。查看当前项目的 Pipeline 运行状态、阶段进度和最近检查结果。
   Use when: 查看进度、了解当前状态、Pipeline 运行情况。
@@ -50,7 +48,7 @@ ls -t .pipeline-progress-*.json 2>/dev/null
   "start_time": "2026-02-13T15:18:00",
   "elapsed_seconds": 720,
   "fix_count": 0,
-  "cli_backend": "claude",
+  "cli_backend": "codex",
   "last_updated": "2026-02-13T15:30:00"
 }
 ```
@@ -88,9 +86,9 @@ Pipeline 进度：{feature}
 当前没有活跃的 Pipeline。
 
 启动方式：
-  - 使用 /prd 开始新需求，完成后启动 Pipeline
-  - 或直接运行：bash ~/.claude/pipeline.sh start "{feature名}" simple
-  - 复杂需求使用：bash ~/.claude/pipeline.sh start "{feature名}" complex
+  - 使用 $prd 开始新需求，完成后启动 Pipeline
+  - 或直接运行：bash ~/.codex/pipeline.sh start "{feature名}" simple
+  - 复杂需求使用：bash ~/.codex/pipeline.sh start "{feature名}" complex
 ```
 
 ---
@@ -117,6 +115,7 @@ Pipeline 进度：{feature}
 ## 注意事项
 
 - 此 Skill 是**只读**操作，不修改任何文件
+- 此 Skill 默认不自动触发并行 agent；仅展示状态
 - 进度文件由 `pipeline.sh` 写入，此 Skill 仅读取展示
 - 多个 Pipeline 并行时，按 feature 分别列出所有进度
 - 展示时间使用**分钟**为单位（`elapsed_seconds / 60`，取整）

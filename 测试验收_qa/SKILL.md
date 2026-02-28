@@ -2,7 +2,7 @@
 name: qa
 description: |
   测试验收。在隔离上下文中启动 pipeline-qa SubAgent 做端到端功能验收。
-  Use when: 测试功能、验收、端到端测试、/check 通过后验证正确性。前置条件：需先完成 /prd 或 /clarify。
+  Use when: 测试功能、验收、端到端测试、/check 通过后验证正确性。前置条件：需先完成 /prd。
 context: fork
 agent: pipeline-qa
 ---
@@ -27,8 +27,9 @@ agent: pipeline-qa
 
 ## 2. 行为准则
 
-- **验收标准唯一来源**：`master.md`（含 units/）或 `handoff_clarify.md`，不是 Plan，不是 Design，不是代码
-- **接口信息辅助**：从 `handoff_design.md` 仅获取接口路径和参数格式，不作为验收标准
+- **验收标准唯一来源**：`master.md`（含 units/），不是 Plan，不是 Design，不是代码
+- **接口信息辅助**：从 `handoff_design.md` 获取接口路径和参数格式
+- **实施约束辅助**：若存在 `design/MOD-*.md`，增加“实施约束验收”（不替代需求验收）
 - **与 Check 差异化**：Check 验"代码质量"，你验"功能是否满足需求"
 - **判定权分离**：你输出 PASS/FAIL 结论与证据，但最终判定以 pipeline.sh 的测试结果为准
 - **逐条需求覆盖**：每条规则及正例/反例逐条 PASS/FAIL + 证据
@@ -41,7 +42,7 @@ agent: pipeline-qa
 
 ### 3.1 验收标准唯一来源原则
 
-QA 验收的唯一标准是需求文档（`master.md` 或 `handoff_clarify.md`），不是 Plan，不是 Design，不是代码。
+QA 验收的唯一标准是需求文档（`master.md` + `units/`），不是 Plan，不是 Design，不是代码。
 
 **为什么**：
 
@@ -49,13 +50,13 @@ QA 验收的唯一标准是需求文档（`master.md` 或 `handoff_clarify.md`�
 - Plan/Design 是实现路径，可能偏离需求
 - 代码通过测试不等于满足需求（"代码正确" != "功能正确"）
 
-**信息来源分工（双格式）**：
+**信息来源分工**：
 
 | 文件 | 用途 | 是否作为验收标准 |
 |------|------|----------------|
-| master.md + units/ | 验收标准（全局约束 + 各 UNIT 规则） | 是（优先使用） |
-| handoff_clarify.md | 验收标准（规则+正例+反例+排除项） | 是（向后兼容） |
+| master.md + units/ | 验收标准（全局约束 + 各 UNIT 规则） | 是 |
 | handoff_design.md | 获取接口路径、参数格式 | 否（仅获取技术信息） |
+| design/MOD-*.md | 获取实施约束（如错误码、状态流、铁律） | 否（辅助验收） |
 | handoff_run.md | 不读取 | 否（保证独立性） |
 | handoff_check.md | 不读取 | 否（保证独立性） |
 
@@ -195,46 +196,39 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 ---
 
-## 6. 前置条件（双格式）
+## 6. 前置条件
 
-以下文件**至少一个**必须存在，作为唯一验收标准：
+以下文件**必须存在**，作为唯一验收标准：
 
-- `docs/pipeline/{feature}/master.md`（新格式，优先使用）
-- `docs/pipeline/{feature}/handoff_clarify.md`（旧格式，向后兼容）
+- `docs/pipeline/{feature}/master.md`
 
-如均不存在，请先执行 `/prd` 或 `/clarify`。
+如不存在，请先执行 `/prd`。
 
-**格式检测与验收策略**：
+**验收策略**：
 
-- **master.md 存在时**（新格式）：
-  - 读取 `master.md` 获取全局约束和 UNIT 索引
-  - 按需加载 `units/UNIT-N.md` 获取各功能规则
-  - 按 UNIT 逐个验收，每个 UNIT 的规则逐条 PASS/FAIL
-  - 全局约束对所有 UNIT 生效
-
-- **handoff_clarify.md 存在时**（旧格式）：
-  - 读取 `handoff_clarify.md` 获取规则列表
-  - 按规则逐条验收（向后兼容）
+- 读取 `master.md` 获取全局约束和 UNIT 索引
+- 按需加载 `units/UNIT-N.md` 获取各功能规则
+- 按 UNIT 逐个验收，每个 UNIT 的规则逐条 PASS/FAIL
+- 全局约束对所有 UNIT 生效
 
 ---
 
 ## 7. 工作流
 
-1. 检测验收标准格式（master.md 优先，handoff_clarify.md 兜底）
-2. 读取验收标准文档 + `handoff_design.md`（接口信息）
+1. 读取验收标准文档 `master.md`（含 units/）
+2. 读取 `handoff_design.md`（接口信息）+ `design/MOD-*.md`（实施约束，如存在）
 3. 启动真实服务 -> 健康检查
 4. 逐条验证每条规则（按反例 -> 边界 -> 正例顺序）
-5. 停止服务
-6. 完成认知偏差自检
-7. 输出到 `docs/pipeline/{feature}/handoff_qa.md`
+5. 若存在 MOD，逐条验证实施约束是否成立
+6. 停止服务
+7. 完成认知偏差自检
+8. 输出到 `docs/pipeline/{feature}/handoff_qa.md`
 
 ---
 
 ## 8. 输出格式
 
-根据前置条件检测结果选择对应格式：
-- **master.md 存在时**：使用按 UNIT 验收格式
-- **handoff_clarify.md 存在时**：使用按规则验收格式（向后兼容）
+使用按 UNIT 验收格式输出。
 
 > 输出模板详见 references/output-templates.md
 
@@ -246,11 +240,11 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 ```
 输入分析：
-- clarify 定义 F1 用户注册功能，3 条规则 + 2 个排除项
+- master 定义 F1 用户注册功能，3 条规则 + 2 个排除项
 - 从 design 获取接口路径：POST /api/v1/users
 
 验收决策：
-- 以 clarify 为唯一标准，独立端到端验证
+- 以 master 为唯一标准，独立端到端验证
 - 启动服务 -> 逐条验证 -> 停止服务
 
 验收表：

@@ -151,11 +151,11 @@ agent: pipeline-designer
 # /design
 
 架构设计入口。SubAgent pipeline-designer 将在隔离上下文中执行：
-1. 读取 docs/pipeline/{feature}/handoff_clarify.md
+1. 读取 docs/pipeline/{feature}/master.md
 2. 执行架构设计（方法论直接内置于业务 Skill 中）
 3. 输出到 docs/pipeline/{feature}/handoff_design.md
 
-> 如 handoff_clarify.md 不存在，请先执行 /clarify。
+> 如 master.md 不存在，请先执行 /prd。
 
 注：方法论知识直接内置在业务 Skill 中，不再通过独立 methodology Skill 引用。
 ```
@@ -198,7 +198,7 @@ agent: pipeline-designer
 
 | Skill | 对应 SubAgent | 说明 |
 |-------|--------------|------|
-| /clarify | 无（交互式） | 需求澄清，升级输出为 Rules+Examples |
+| /prd | 无（交互式） | 需求澄清，升级输出为 Rules+Examples |
 | /prd | 无（交互式） | 产品需求文档化，输出 master.md + units/ 格式（替代 context_gate.sh 的机械拆解） |
 | /design | pipeline-designer | `context: fork` + `agent`，架构设计方法论内置 |
 | /plan | pipeline-planner | `context: fork` + `agent`，架构方法论 + 审查标准内置 |

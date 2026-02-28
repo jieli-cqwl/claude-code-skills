@@ -1,8 +1,5 @@
 ---
 name: security
-command: security
-user_invocable: true
-parallel_mode: true
 description: |
   安全漏洞扫描。使用 Bandit/Semgrep/Gitleaks 检查 OWASP Top 10 漏洞，提供可执行修复代码。
   Use when: 安全检查、发现注入风险、发布前或 PR 合并前安全审查、涉及 SQL 注入/XSS/CSRF。
@@ -39,9 +36,9 @@ description: |
 
 ---
 
-## 与 /scan 的区别
+## 与 $scan 的区别
 
-| 维度 | /scan | /security |
+| 维度 | $scan | $security |
 |------|-------|-----------|
 | **目标** | 代码质量（技术债） | 安全漏洞 |
 | **检测方式** | Grep 模式匹配 | 专业安全工具 |
@@ -51,16 +48,24 @@ description: |
 
 ---
 
+## Codex 执行约定
+
+- 默认主线程串行执行，不自动派发子 agent。
+- 仅当用户明确要求“使用子 agent/并行执行”时，才启用并行架构（8 worker）。
+- 未明确要求并行时，按串行模式执行：工具扫描 -> AI 语义分析 -> 报告汇总。
+
+---
+
 ## 执行模式
 
 ```bash
-/security              # 默认：完整扫描
-/security quick        # 快速：仅 Bandit + Gitleaks (<30s)
-/security full         # 全面：所有工具 + AI 审查
-/security deps         # 依赖：pip-audit / npm audit
-/security docker       # 容器：Trivy 镜像扫描
-/security fix          # 修复：扫描 + 自动修复高置信度问题
-/security diff         # 对比：与上次扫描结果对比
+$security              # 默认：完整扫描
+$security quick        # 快速：仅 Bandit + Gitleaks (<30s)
+$security full         # 全面：所有工具 + AI 审查
+$security deps         # 依赖：pip-audit / npm audit
+$security docker       # 容器：Trivy 镜像扫描
+$security fix          # 修复：扫描 + 自动修复高置信度问题
+$security diff         # 对比：与上次扫描结果对比
 ```
 
 ---
@@ -68,13 +73,13 @@ description: |
 ## 执行流程
 
 ```
-/security [mode]
+$security [mode]
     ↓
 Phase 1: 环境检测
     - 检测项目语言和框架
     - 检查工具可用性
     ↓
-Phase 2: 工具扫描（并行）
+Phase 2: 工具扫描（默认串行，可选并行）
     ┌──────────────────────────────────────────┐
     │  SAST: Bandit (Python) / Semgrep (全栈)  │
     │  密钥: Gitleaks                          │
@@ -96,11 +101,19 @@ Phase 5: (可选) 自动修复
 
 ---
 
-## 并行架构
+## 默认串行路径（推荐）
+
+- Phase 2：按顺序执行 Bandit/Semgrep/Gitleaks/依赖扫描（按项目类型适配）。
+- Phase 3：AI 语义分析与误报复核。
+- Phase 4：汇总并输出报告。
+
+---
+
+## 并行架构（可选）
 
 > **设计目标**：通过 8 Agent 并行扫描 + 8 Agent 并行修复建议，大幅提升安全扫描效率。
 
-### Phase 1: 并行扫描（8 Agent，subagent_type=Bash）
+### Phase 1: 并行扫描（8 Agent，角色=worker）
 
 同时启动以下 8 个扫描任务，每个 Agent 负责特定的安全检测领域：
 
@@ -148,7 +161,7 @@ Phase 5: (可选) 自动修复
 
 **等待所有 Agent 完成后继续。**
 
-### Phase 2: 并行修复建议（8 Agent，subagent_type=general-purpose）
+### Phase 2: 并行修复建议（8 Agent，角色=worker）
 
 各 Agent 为 Phase 1 发现的漏洞生成修复代码，按漏洞类型分配：
 
@@ -222,16 +235,16 @@ Phase 5: (可选) 自动修复
 
 **单个 Agent 失败**：
 - 记录失败原因
-- 其他 Agent 继续执行
-- 报告中标注"[部分扫描]"及失败的 Agent
+- 立即终止并行扫描阶段并输出 `FAIL`
+- 禁止汇总部分结果为最终结论
 
 **超时处理**：
-- 单个 Agent 超时（120 秒）：标记超时，继续汇总已完成结果
-- 报告中标注超时的扫描任务
+- 单个 Agent 超时（120 秒）：立即终止当前流程并输出 `FAIL`
+- 记录超时任务与原因，要求修复后重跑
 
 **工具不可用**：
 - Agent 检测到工具缺失时，输出 `{"error": "tool_not_found", "tool": "xxx"}`
-- 主 Agent 汇总时提示用户安装缺失工具
+- 主 Agent 立即输出 `FAIL`，提示用户安装缺失工具后重跑
 
 **结果冲突**：
 - 多个 Agent 对同一位置报告不同严重程度：取最高严重程度
@@ -325,19 +338,19 @@ cursor.execute(query, (user_id,))
 ## 与其他 Skills 的关系
 
 ```
-/prd → /explore → /design → /plan
+$prd → 项目探索（可选）→ $design → $plan
                                    ↓
-                        /run-plan[/run-plan-parallel] (开发)
+                        $run-plan[$run-plan-parallel] (开发)
                                    ↓
-/scan (代码质量) ←──────→ /security (安全专项)
+$scan (代码质量) ←──────→ $security (安全专项)
          │                        │
          └────────────┬───────────┘
                       ↓
-                   /check
+                   $check
                       ↓
-                    /qa
+                    $qa
                       ↓
-                   /ship
+                   $ship
 ```
 
 ---
@@ -391,6 +404,6 @@ mkdir -p docs/安全扫描
 
 🎯 下一步:
 1. 立即修复严重漏洞（必须在发布前）
-2. 使用 /security fix 自动修复高置信度问题
+2. 使用 $security fix 自动修复高置信度问题
 3. 人工复核业务逻辑相关漏洞
 ```

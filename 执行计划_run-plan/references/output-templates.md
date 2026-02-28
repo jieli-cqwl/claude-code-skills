@@ -6,7 +6,7 @@
 # handoff_run.md
 
 ## 输入分析
-[Plan 任务理解 + Design 接口理解]
+[Plan 任务理解 + Design 接口理解 + MOD 约束理解（如存在）]
 
 ## 决策
 [任务执行顺序、实现策略、测试策略]
@@ -17,6 +17,7 @@ TEST_CMD: <命令>
 ### 执行记录
 
 ### Task-1: [标题]
+- design_ref: [MOD-001 | HLD-inline]
 - 测试先行: [测试文件和用例]
 - 红阶段: [测试运行失败输出]
 - 实现: [修改的文件]
@@ -29,6 +30,9 @@ TEST_CMD: <命令>
 
 ### Task-Commit 对照表
 | Task | Commit | 含测试 | 状态 |
+
+### Task-design_ref 对照表
+| Task | design_ref | 约束执行说明 |
 
 ### 交接项
 - commit 列表（含 hash）

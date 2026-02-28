@@ -20,7 +20,7 @@
 | 变更 | 说明 |
 |------|------|
 | 知识 Skills 全部删除 | `_架构方法论`、`_TDD方法论`、`_评审标准`、`_质量标准`、`_验收方法论` 均不存在，方法论已合并进对应 pipeline Skill |
-| `/clarify` 兼容保留 | `/prd` 为主入口（输出 `master.md` + `units/`），下游继续兼容 `handoff_clarify.md` |
+| `/prd` 兼容保留 | `/prd` 为主入口（输出 `master.md` + `units/`），下游继续兼容 `master.md` |
 | Agent 结构不变 | 6 个 pipeline agent 保持不变 |
 | 双目录关系 | `~/.codex` 与 `~/.claude` 的 pipeline 核心结构一致，但 reference 存在少量平台特化差异 |
 
@@ -57,11 +57,11 @@ pipeline-fixer       → skills: [fix]       → Read, Write, Edit, Bash, Glob, 
 
 | Agent | 输入 | 输出 |
 |-------|------|------|
-| designer | master.md / handoff_clarify.md | handoff_design.md + Key_Decisions.md |
-| planner | master.md / handoff_clarify.md + handoff_design.md | review_design_N.md + handoff_plan.md |
+| designer | master.md / master.md | handoff_design.md + Key_Decisions.md |
+| planner | master.md / master.md + handoff_design.md | review_design_N.md + handoff_plan.md |
 | implementer | handoff_plan.md + handoff_design.md | review_plan_N.md + handoff_run.md |
 | checker | handoff_plan.md + handoff_run.md | handoff_check.md |
-| qa | master.md / handoff_clarify.md + handoff_design.md | handoff_qa.md |
+| qa | master.md / master.md + handoff_design.md | handoff_qa.md |
 | fixer | handoff_qa.md + handoff_check.md | handoff_fix_N.md |
 
 ### 双目录同步要求
@@ -109,7 +109,7 @@ pipeline-fixer       → skills: [fix]       → Read, Write, Edit, Bash, Glob, 
 /design 触发
   ↓ 主对话上下文（优先交互，不依赖特定提问工具）
 阶段 1：上下文扫描（自动）
-  - 读取需求文档（master.md + units/ 或 handoff_clarify.md）
+  - 读取需求文档（master.md + units/ 或 master.md）
   - 扫描现有代码
   - 识别适用规范
   ↓
@@ -446,7 +446,7 @@ docs/pipeline/{feature}/
 
 ### 阶段 1：上下文扫描（主对话，自动）
 
-1. 读取需求文档（master.md + units/ 或 handoff_clarify.md）
+1. 读取需求文档（master.md + units/ 或 master.md）
 2. Glob/Grep 扫描现有代码结构、命名模式、框架版本
 3. 识别适用规范（参考规范适用矩阵），按需读取 `reference/` 下的规范文件
 4. 产出：内部整理扫描摘要（不输出文件）

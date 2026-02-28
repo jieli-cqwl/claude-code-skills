@@ -18,13 +18,13 @@
 
 ```bash
 # 门控1: 检查 AC 来源文档
-CLARIFY_DOC=$(ls docs/需求澄清/clarify_*.md 2>/dev/null | head -1)
-if [ -z "$CLARIFY_DOC" ]; then
+MASTER_DOC=$(ls docs/pipeline/*/master.md 2>/dev/null | head -1)
+if [ -z "$MASTER_DOC" ]; then
   echo "❌ 门控1失败: AC 来源文档不存在"
-  echo "   修复: 执行 /clarify 生成需求文档和 AC 表格"
+  echo "   修复: 执行 /prd 生成需求文档和 AC 表格"
   exit 1
 else
-  echo "✅ 门控1通过: $CLARIFY_DOC"
+  echo "✅ 门控1通过: $MASTER_DOC"
 fi
 
 # 门控2: 检查计划文档引用 AC（非重新定义）
@@ -44,7 +44,7 @@ fi
 TEST_FILE=$(ls tests/test_*_acceptance.py tests/test_*.py 2>/dev/null | head -1)
 if [ -z "$TEST_FILE" ]; then
   echo "❌ 门控3失败: 测试文件不存在"
-  echo "   修复: 执行 /test-gen from-clarify $CLARIFY_DOC"
+  echo "   修复: 执行 /test-gen from-master $MASTER_DOC"
   exit 1
 else
   echo "✅ 门控3通过: $TEST_FILE"
@@ -60,17 +60,17 @@ echo "✅ 所有门控检查通过，可以继续执行"
 ```
 门控1失败（AC 文档不存在）
     ↓
-执行 /clarify 生成需求文档
-    ↓ 输出: docs/需求澄清/clarify_[功能名].md
+执行 /prd 生成需求文档
+    ↓ 输出: docs/pipeline/{feature}/master.md
 
 门控2失败（计划文档问题）
     ↓
 执行 /plan 生成计划文档
-    ↓ 确保引用 /clarify 的 AC，不重新定义
+    ↓ 确保引用 /prd 的 AC，不重新定义
 
 门控3失败（测试文件不存在）
     ↓
-执行 /test-gen from-clarify docs/需求澄清/clarify_[功能名].md
+执行 /test-gen from-master docs/pipeline/{feature}/master.md
     ↓ 输出: tests/test_[功能名]_acceptance.py
 
 所有门控通过后

@@ -17,6 +17,7 @@
 
 ### Task-1: [标题]
 - 文件: [具体文件路径列表]
+- design_ref: [MOD-001 | HLD-inline]
 - AC1: [可 assert 的验收标准]
 - AC2: [可 assert 的验收标准]
 - depends_on: []
@@ -24,6 +25,7 @@
 
 ### Task-2: [标题]
 - 文件: [具体文件路径列表]
+- design_ref: [MOD-002 | HLD-inline]
 - AC1: [可 assert 的验收标准]
 - depends_on: [Task-1]
 - shared_files: [被多个 Task 同时修改的文件路径列表]
@@ -31,12 +33,13 @@
 ...
 
 ### 覆盖表
-[需求规则 -> design 接口 -> Task -> 覆盖状态]
+[需求规则 -> design/MOD -> Task -> 覆盖状态]
 
 ### 交接项
 - 任务执行顺序
 - 文件改动清单
 - 每任务 AC
+- Task 与 design_ref 对照关系
 - 测试策略
 ```
 
