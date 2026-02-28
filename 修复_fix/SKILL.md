@@ -7,7 +7,7 @@ context: fork
 agent: pipeline-fixer
 ---
 
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-fixer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep。参见 agents/pipeline-fixer.md 的 allowedTools 定义 -->
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-fixer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep, LSP。参见 agents/pipeline-fixer.md 的 allowedTools 定义 -->
 
 # /fix -- 问题修复
 

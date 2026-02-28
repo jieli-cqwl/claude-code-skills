@@ -7,7 +7,7 @@ context: fork
 agent: pipeline-checker
 ---
 
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-checker 执行。SubAgent 可用工具：Read, Bash, Glob, Grep。参见 agents/pipeline-checker.md 的 allowedTools 定义 -->
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-checker 执行。SubAgent 可用工具：Read, Bash, Glob, Grep, LSP。参见 agents/pipeline-checker.md 的 allowedTools 定义 -->
 
 # /check -- 开发检查
 
@@ -175,6 +175,12 @@ Lint: ruff check src/ -> 0 errors, 3 warnings
 设计约束合规:
   FAIL: Task-3 未返回 MOD-002 约束要求的 error_code（src/api/users.py:92）
 ```
+
+#### 扫描 5：代码复用合规（依据 reference/代码复用.md）
+
+检查新增文件/函数是否经过 LSP 复用评估：
+- `findReferences`：新增符号的引用数（是否真正被使用）
+- `workspaceSymbol`：是否存在同名/近似符号（可能重复实现）
 
 ### 3.4 客观证据要求
 

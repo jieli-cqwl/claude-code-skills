@@ -7,7 +7,7 @@ context: fork
 agent: pipeline-implementer
 ---
 
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-implementer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep。参见 agents/pipeline-implementer.md 的 allowedTools 定义 -->
+<!-- 权限说明：本 Skill 通过 SubAgent pipeline-implementer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep, LSP。参见 agents/pipeline-implementer.md 的 allowedTools 定义 -->
 
 # /run-plan -- 执行开发计划
 
@@ -178,6 +178,7 @@ REQUIRED：每个 Task 完成后、标记为 DONE 前，执行以下自检：
 3. "有没有空 catch、裸 except 或硬编码？" -- 快速 Grep 检查
 4. "Lint 和类型检查能通过吗？" -- 运行 Lint 和类型检查确认
 5. "有无占位符代码？" -- Grep 搜索 NotImplementedError、TODO、FIXME
+6. "新增代码是否与现有实现重复？" -- LSP workspaceSymbol + findReferences 确认
 
 代码质量量化规则：
 
