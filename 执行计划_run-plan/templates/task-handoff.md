@@ -65,10 +65,10 @@ Test:   backend/tests/test_new_file.py
 - **构建**: pip / poetry / Vite
 
 ### 项目规范
-必须遵循 `.claude/rules/` 目录下的规范：
-- `代码质量.md` - Fail Fast 原则、零容忍行为
-- `全栈开发.md` - API 设计、错误码规范
-- `性能效率.md` - 缓存、批量、并发
+必须遵循 `~/.claude/reference/` 目录下的规范：
+- `~/.claude/reference/代码质量.md` - Fail Fast 原则、零容忍行为
+- `~/.claude/reference/全栈开发.md` - API 设计、错误码规范
+- `~/.claude/reference/性能效率.md` - 缓存、批量、并发
 
 ### 代码风格
 ```python

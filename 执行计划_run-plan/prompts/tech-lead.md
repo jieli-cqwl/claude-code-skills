@@ -269,7 +269,7 @@ cat ~/.claude/skills/执行计划_run-plan/prompts/implementer.md
 ## 项目背景
 
 - **技术栈**: [从 CLAUDE.md 或计划文档获取]
-- **项目规范**: 见 .claude/rules/ 目录
+- **项目规范**: 见 `~/.claude/reference/` 目录
 
 ## 必读规范
 

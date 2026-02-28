@@ -24,12 +24,28 @@ description: |
 
 ## 前置条件
 
-1. `docs/pipeline/{feature}/handoff_clarify.md` 必须存在。请先执行 `/clarify` 完成需求澄清。
+1. `docs/pipeline/{feature}/master.md`（由 `/prd` 生成）或 `docs/pipeline/{feature}/handoff_clarify.md`（由 `/clarify` 生成）必须存在。请先执行 `/prd` 或 `/clarify` 完成需求文档化。
 2. 用户确认需求后说"开始"或"执行"。
+3. 若走 Plan Ready 快速入口，需额外满足：
+   - `handoff_design.md` + `handoff_plan.md` 已存在
+   - 用户已完成人工评审并明确同意"从 implement 开始"
 
 ## 编排流程
 
 ultrathink
+
+### 快速入口：Plan Ready（跳过设计与计划）
+
+当 `handoff_plan.md` 已生成且评审通过时，可直接进入执行交付阶段：
+
+```
+Fast Path:
+  A. 检查 handoff_clarify.md / handoff_design.md / handoff_plan.md 均存在
+  B. 标记 design=SKIPPED, plan=SKIPPED
+  C. 直接进入步骤 7（/run-plan 或 /run-plan-parallel）
+```
+
+适用场景：你已人工把关需求、设计、计划，不希望重复评审，希望自动完成开发/测试/修复。
 
 ### 阶段 1：方向决策（Design-Plan 评审循环）
 
@@ -98,7 +114,7 @@ QA-Fix 循环（最多 10 轮）:
 | Plan 确认 | Plan 评审通过后 | handoff_plan.md 的任务清单和依赖关系 |
 | QA >= 5 轮 | QA-Fix 循环达到 5 轮 | 历次修复记录和当前 FAIL 项 |
 
-UNATTENDED_MODE=true 时：跳过上述确认等待（与 pipeline.sh 行为一致）。
+若用户明确要求“无人值守/无需确认直接执行”，可跳过上述确认等待。
 确认方式：用户回复"继续"/"确认" 则继续，回复"停止"/"修改" 则暂停。
 
 ## 失败处理策略
@@ -120,9 +136,19 @@ UNATTENDED_MODE=true 时：跳过上述确认等待（与 pipeline.sh 行为一�
 当前阶段: 执行开发（Task 3/5）
 ```
 
+Plan Ready 快速入口展示：
+
+```
+[auto-dev] 进度: design(SKIPPED) -> plan(SKIPPED) -> run-plan[-parallel](IN PROGRESS) -> check -> qa
+当前阶段: 执行开发（Task 1/N）
+```
+
 ## 注意事项
 
 - 每个阶段都在隔离上下文中执行（context: fork），不会污染主对话
 - 阶段间通过 Handoff 文件传递信息
 - 评审循环确保上游产出质量，避免低质量产出传递到下游
 - pipeline.sh 提供更强的加固能力（超时/费用/锁），适合无人值守场景
+- 与脚本编排对齐：使用单版本命令 `bash ~/.claude/pipeline.sh start <feature> <simple|complex>`，随后循环 `run-step`，最后 `finalize`
+- 统一入口层不再接受旧版环境变量式流程参数，避免误触发历史行为
+- 双格式兼容：`/prd` 输出 `master.md + units/`，`/clarify` 输出 `handoff_clarify.md`，下游阶段自动检测可用格式

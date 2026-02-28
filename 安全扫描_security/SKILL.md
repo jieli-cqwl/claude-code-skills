@@ -325,7 +325,7 @@ cursor.execute(query, (user_id,))
 ## 与其他 Skills 的关系
 
 ```
-/clarify → /explore → /design → /plan
+/prd → /explore → /design → /plan
                                    ↓
                         /run-plan[/run-plan-parallel] (开发)
                                    ↓

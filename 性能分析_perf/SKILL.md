@@ -257,7 +257,7 @@ users = session.query(User).options(joinedload(User.posts)).all()
 ## 与其他 Skills 的关系
 
 ```
-/clarify → /explore → /design → /plan
+/prd → /explore → /design → /plan
                                    ↓
                         /run-plan[/run-plan-parallel] (开发)
                                    ↓

@@ -88,8 +88,9 @@ Pipeline 进度：{feature}
 当前没有活跃的 Pipeline。
 
 启动方式：
-  - 使用 /clarify 开始新需求，完成后启动 Pipeline
-  - 或直接运行：~/.claude/pipeline.sh "{feature名}" {项目路径}
+  - 使用 /prd 开始新需求，完成后启动 Pipeline
+  - 或直接运行：bash ~/.claude/pipeline.sh start "{feature名}" simple
+  - 复杂需求使用：bash ~/.claude/pipeline.sh start "{feature名}" complex
 ```
 
 ---
@@ -99,7 +100,7 @@ Pipeline 进度：{feature}
 ### 好的进度报告
 
 ```
-[auto-dev] 进度: clarify(DONE) -> design(DONE) -> plan(IN PROGRESS) -> run-plan[-parallel] -> check -> qa
+[auto-dev] 进度: prd(DONE) -> design(DONE) -> plan(IN PROGRESS) -> run-plan[-parallel] -> check -> qa
 当前阶段: 编写实施计划（Task 拆分中，预计 5 个 Tasks）
 耗时: 12 分钟 | Token: ~45K
 ```

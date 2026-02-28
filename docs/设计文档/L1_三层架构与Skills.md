@@ -21,35 +21,40 @@
 |  职责：角色身份 + 行为边界 + 输入输出规范 + 负向约束                |
 |  通过 skills 字段引用知识层                                       |
 +-------------------------------------------------------------+
-|  知识层：Skills（可复用方法论沉淀）                                 |
+|  知识层：方法论（内置于业务 Skill）                                   |
 |  职责：方法论、经验、质量标准                                       |
-|  跨 SubAgent 共享复用                                             |
+|  直接内置于业务 Skill，不再作为独立 Skill 存在                       |
 +-------------------------------------------------------------+
 ```
 
-### 为什么拆分三层
+> **架构演进说明**：原设计中知识层有 5 个独立 Methodology Skill，经实践验证后已合并到业务 Skill 中。方法论不再独立存在，而是直接内置于对应的业务 Skill（详见第 2 节和第 5 节）。
 
-| 问题 | 旧方案（All-in-one） | 新方案（三层分离） |
-|------|---------------------|------------------|
-| SubAgent 臃肿 | 角色+方法论+标准混一起，25k+ tokens | < 3k tokens，方法论通过 skills 引用 |
-| 方法论无法复用 | TDD 在 Implementer 和 Fixer 各写一份 | 抽取为 Skill，两个 SubAgent 共享 |
-| 修改要改多处 | 更新标准需改多个 SubAgent | 修改 Skill 一处，所有引用者生效 |
-| Skills 价值被稀释 | Skill 变成薄路由层 | 回归方法论本质 |
+### 为什么拆分三层（及后续演进）
+
+| 问题 | 旧方案（All-in-one） | 三层分离（初版） | 当前方案（方法论内置） |
+|------|---------------------|------------------|---------------------|
+| SubAgent 臃肿 | 角色+方法论+标准混一起，25k+ tokens | < 3k tokens，方法论通过 skills 引用 | 同左，方法论内置于业务 Skill |
+| 方法论无法复用 | TDD 在 Implementer 和 Fixer 各写一份 | 抽取为独立 Skill，跨 SubAgent 共享 | 内置到各业务 Skill，消除间接引用层 |
+| 修改要改多处 | 更新标准需改多个 SubAgent | 修改 Skill 一处，所有引用者生效 | 方法论与业务 Skill 一体维护 |
+| Skills 价值被稀释 | Skill 变成薄路由层 | 回归方法论本质 | 业务 Skill 自包含方法论 |
 
 ---
 
-## 2. 知识复用矩阵
+## 2. 方法论内置说明
 
-| Skill（知识层） | Designer | Planner | Implementer | Checker | QA | Fixer |
-|----------------|:--------:|:-------:|:-----------:|:-------:|:--:|:-----:|
-| `architecture` | **主用** | 引用 | - | - | - | - |
-| `tdd-methodology` | - | - | **主用** | - | - | **主用** |
-| `code-quality` | - | - | 引用 | **主用** | - | 引用 |
-| `review-standard` | - | 引用 | - | **主用** | - | - |
-| `qa-methodology` | - | - | - | - | **主用** | - |
+原架构中知识层有 5 个独立 Methodology Skill（`arch-methodology`、`tdd-methodology`、`code-quality`、`review-standard`、`qa-methodology`），已全部删除。方法论现在直接内置于对应的业务 Skill 中，不再作为独立 Skill 存在。
 
-**主用** = 核心方法论依据
-**引用** = 需了解但非核心
+### 方法论吸收关系
+
+| 原 Methodology Skill | 吸收到的业务 Skill |
+|----------------------|-------------------|
+| `arch-methodology` | 架构设计_design + 写计划_plan |
+| `tdd-methodology` | 执行计划_run-plan + 修复_fix |
+| `code-quality` | 开发检查_check + 执行计划_run-plan + 修复_fix |
+| `review-standard` | 写计划_plan + 开发检查_check |
+| `qa-methodology` | 测试验收_qa |
+
+**优势**：消除了独立方法论 Skill 的间接引用层，每个业务 Skill 自包含所需的方法论知识，减少加载开销和上下文碎片化。
 
 ---
 
@@ -147,10 +152,12 @@ agent: pipeline-designer
 
 架构设计入口。SubAgent pipeline-designer 将在隔离上下文中执行：
 1. 读取 docs/pipeline/{feature}/handoff_clarify.md
-2. 执行架构设计（方法论由 SubAgent 的 skills 字段（如 arch-methodology）引入）
+2. 执行架构设计（方法论直接内置于业务 Skill 中）
 3. 输出到 docs/pipeline/{feature}/handoff_design.md
 
 > 如 handoff_clarify.md 不存在，请先执行 /clarify。
+
+注：方法论知识直接内置在业务 Skill 中，不再通过独立 methodology Skill 引用。
 ```
 
 **原生机制**：
@@ -161,99 +168,48 @@ agent: pipeline-designer
 
 ---
 
-## 5. Skills 知识层设计（5 个）
+## 5. 方法论内置架构（替代原独立知识层）
 
-### 5.1 `architecture`（架构设计方法论）
+原架构中此处定义了 5 个独立的 Methodology Skill（`architecture`、`tdd-methodology`、`code-quality`、`review-standard`、`qa-methodology`），作为知识层被 SubAgent 通过 `skills` 字段引用。
 
-**引用者**：pipeline-designer（主用）、pipeline-planner（引用）
-**路径**：`~/.claude/skills/pipeline-architecture/SKILL.md`
+**现状**：这 5 个独立 Methodology Skill 已全部删除，方法论内容直接内置到对应的业务 Skill 中。
 
-**应包含的内容**：
-- 先扫描现有代码再设计的方法论（Glob/Grep 了解项目结构）
-- 多方案对比方法论（Tree of Thoughts）：关键决策必须 2-3 备选方案，对比实现复杂度/一致性/可维护性
-- 接口定义完整性标准：入参（类型+校验）、出参（成功+失败）、错误码
-- 模块边界设计原则："负责什么"和"不负责什么"
-- 设计可追溯性：每个设计决策对应需求中的功能点
-- Few-shot 对比示例
+### 变更原因
 
-**来源**：从 L2 原文 4.1 节 Designer 的"质量标准"、"多方案对比"、"Few-shot 示例"中提取
+- **减少间接层**：独立方法论 Skill 增加了加载和解析开销，实际上每个方法论只被 1-2 个业务 Skill 使用
+- **降低维护成本**：方法论与业务 Skill 紧耦合，分开维护反而容易不一致
+- **简化架构**：三层架构中的知识层现在合并到执行层，变为更扁平的结构
 
-### 5.2 `tdd-methodology`（TDD 流程）
+### 方法论内容去向
 
-**引用者**：pipeline-implementer（主用）、pipeline-fixer（主用）
-**路径**：`~/.claude/skills/pipeline-tdd-methodology/SKILL.md`
-
-**应包含的内容**：
-- 严格 TDD 执行顺序：写测试 -> 运行确认失败（红）-> 写实现 -> 确认通过（绿）-> 重构
-- 一任务一 commit 规范：`feat(Task-N): 描述`，每 commit 必须包含测试
-- 阻塞标注规范：BLOCKED + 原因
-- 测试先行的验证证据要求：Handoff 必须包含测试运行记录
-- Few-shot 对比示例
-- 修复场景 TDD 变体：每个修复附回归测试，修复前后 diff 测试结果
-
-**来源**：从 L2 原文 4.3 节 Implementer 和 4.6 节 Fixer 中提取
-
-### 5.3 `code-quality`（代码质量标准）
-
-**引用者**：pipeline-checker（主用）、pipeline-implementer（引用）、pipeline-fixer（引用）
-**路径**：`~/.claude/skills/pipeline-code-quality/SKILL.md`
-
-**应包含的内容**：
-- 五维检查框架：测试、Lint、类型检查、代码质量规则、AC 覆盖
-- 代码质量量化规则：函数 <= 40 行、参数 <= 5 个、嵌套 <= 3 层、无空 catch、无裸 except、无硬编码
-- 客观证据要求：命令输出、文件路径:行号、具体数值
-- PASS/FAIL 判定标准：五维全 PASS 才是 PASS
-- Few-shot 对比示例
-
-**来源**：从 L2 原文 4.4 节 Checker 的"质量标准"中提取
-
-### 5.4 `review-standard`（代码审查标准）
-
-**引用者**：pipeline-checker（主用）、pipeline-planner（引用，用于 Design 评审）
-**路径**：`~/.claude/skills/pipeline-review-standard/SKILL.md`
-
-**应包含的内容**：
-- 对抗性审查思维（Adversarial Mindset）：有罪推定，假设代码有漏洞
-- Design 评审标准（DESIGN_OK vs DESIGN_ISSUE）：clarify 规则覆盖、接口完整性、可执行性、过度设计、数据模型
-- Plan 评审标准（PLAN_OK vs PLAN_ISSUE）：文件路径验证、AC 可测性、依赖拓扑、任务粒度、设计一致性
-- 评审输出格式规范：REVIEW 行 + Issues 列表
-- 橡皮图章检测：禁止"看起来没问题"的模糊结论
-
-**来源**：从 L2 原文 4.2 节 Planner 评审 和 4.4 节 Checker 对抗性审查中提取
-
-### 5.5 `qa-methodology`（QA 验收方法论）
-
-**引用者**：pipeline-qa（主用）
-**路径**：`~/.claude/skills/pipeline-qa-methodology/SKILL.md`
-
-**应包含的内容**：
-- 验收标准唯一来源原则：clarify 是唯一标准
-- 与 Check 差异化：Check 验"代码质量"，QA 验"功能是否满足需求"
-- 逐条需求覆盖方法：每条规则及正例/反例逐条 PASS/FAIL + 证据
-- 端到端验证方法：启动真实服务 -> 健康检查 -> 端到端测试 -> 停止服务
-- 边界条件和排除项必测
-- FAIL 项三要素：期望行为 + 实际行为 + 复现命令
-- Few-shot 对比示例
-
-**来源**：从 L2 原文 4.5 节 QA 的"质量标准"和"Few-shot 示例"中提取
+| 原 Methodology Skill | 核心内容 | 内置到的业务 Skill |
+|----------------------|---------|-------------------|
+| `architecture`（架构设计方法论） | 多方案对比、接口定义、模块边界 | 架构设计_design、写计划_plan |
+| `tdd-methodology`（TDD 流程） | 红绿重构、一任务一 commit、阻塞标注 | 执行计划_run-plan、修复_fix |
+| `code-quality`（代码质量标准） | 五维检查、量化规则、PASS/FAIL 判定 | 开发检查_check、执行计划_run-plan、修复_fix |
+| `review-standard`（代码审查标准） | 对抗性审查、Design/Plan 评审标准 | 写计划_plan、开发检查_check |
+| `qa-methodology`（QA 验收方法论） | 验收标准来源、端到端验证、FAIL 三要素 | 测试验收_qa |
 
 ---
 
-## 6. Skills 完整清单（19 个）
+## 6. Skills 完整清单
 
-### Pipeline 核心（9 个）
+### Pipeline 核心（10 个）
 
 | Skill | 对应 SubAgent | 说明 |
 |-------|--------------|------|
-| /clarify | 无（交互式） | 保持现有，升级输出为 Rules+Examples |
-| /design | pipeline-designer | `context: fork` + `agent`，引用 architecture |
-| /plan | pipeline-planner | `context: fork` + `agent`，引用 architecture + review-standard |
-| /run-plan | pipeline-implementer | `context: fork` + `agent`，引用 tdd-methodology + code-quality |
-| /check | pipeline-checker | `context: fork` + `agent`，引用 code-quality + review-standard |
-| /qa | pipeline-qa | `context: fork` + `agent`，引用 qa-methodology |
-| /fix | pipeline-fixer（新增） | `context: fork` + `agent`，引用 tdd-methodology + code-quality |
-| /ship | 无（需用户确认） | 保持现有 |
-| /status | 无（直接读取进度文件） | 新增 |
+| /clarify | 无（交互式） | 需求澄清，升级输出为 Rules+Examples |
+| /prd | 无（交互式） | 产品需求文档化，输出 master.md + units/ 格式（替代 context_gate.sh 的机械拆解） |
+| /design | pipeline-designer | `context: fork` + `agent`，架构设计方法论内置 |
+| /plan | pipeline-planner | `context: fork` + `agent`，架构方法论 + 审查标准内置 |
+| /run-plan | pipeline-implementer | `context: fork` + `agent`，TDD + 代码质量标准内置 |
+| /check | pipeline-checker | `context: fork` + `agent`，代码质量 + 审查标准内置 |
+| /qa | pipeline-qa | `context: fork` + `agent`，QA 验收方法论内置 |
+| /fix | pipeline-fixer | `context: fork` + `agent`，TDD + 代码质量标准内置 |
+| /ship | 无（需用户确认） | 代码交付 |
+| /status | 无（直接读取进度文件） | 进度查询 |
+
+> 方法论不再通过独立 Skill 引用，而是直接内置在各业务 Skill 中（参见第 5 节）。
 
 ### 独立工具（6 个，与 Pipeline 无关）
 
@@ -277,7 +233,7 @@ agent: pipeline-designer
 
 > 领域专用 Skills 建议从全局移到项目级 `.claude/skills/`。
 
-### 已删除（5 个）
+### 已删除（10 个）
 
 | Skill | 删除原因 |
 |-------|---------|
@@ -286,3 +242,8 @@ agent: pipeline-designer
 | /test-gen | 被 Implementer 严格 TDD 吸收 |
 | /explore | Designer 已包含多方案对比 |
 | /debug | 合并到 /fix |
+| /architecture（Methodology） | 内置到 架构设计_design + 写计划_plan |
+| /tdd-methodology（Methodology） | 内置到 执行计划_run-plan + 修复_fix |
+| /code-quality（Methodology） | 内置到 开发检查_check + 执行计划_run-plan + 修复_fix |
+| /review-standard（Methodology） | 内置到 写计划_plan + 开发检查_check |
+| /qa-methodology（Methodology） | 内置到 测试验收_qa |

@@ -380,7 +380,7 @@ npm test                              # 必须看到 X passed
 ## 项目背景
 
 - **技术栈**: Python 3.10+ + FastAPI + SQLAlchemy
-- **项目规范**: 见 .claude/rules/ 目录
+- **项目规范**: 见 `~/.claude/reference/` 目录
 - **测试要求**: 严格 TDD（先测试后实现）
 
 ## 必读规范
@@ -481,7 +481,7 @@ pytest backend/tests/ -v
 - [ ] 这是我最好的工作？
 - [ ] 命名清晰准确？
 - [ ] 代码干净可维护？
-- [ ] 符合项目规范（.claude/rules/）？
+- [ ] 符合项目规范（`~/.claude/reference/`）？
 
 ### 纪律检查
 - [ ] 避免了过度构建？

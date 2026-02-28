@@ -41,6 +41,7 @@ ultrathink
 
 1. `docs/pipeline/{feature}/handoff_plan.md` 必须存在。如不存在，请先执行 `/plan`。
 2. `docs/pipeline/{feature}/handoff_design.md` 必须存在。如不存在，请先执行 `/design`。
+3. 需求文档：`docs/pipeline/{feature}/master.md` 或 `docs/pipeline/{feature}/handoff_clarify.md` 必须存在（双格式兼容）。
 
 ---
 
@@ -259,10 +260,16 @@ DAG 的 depends_on 关系必须严格遵守，同 Layer 内不允许有依赖关
 ## 输入分析
 [Plan 任务理解 + Design 接口理解]
 
-## 执行模式
+## 决策
+[分层并行拓扑、冲突规避策略、执行顺序]
+
+## 产出
+TEST_CMD: <命令>
+
+### 执行模式
 并行执行（/run-plan-parallel）
 
-## 执行记录
+### 执行记录
 
 ### Layer 0
 
@@ -291,18 +298,17 @@ DAG 的 depends_on 关系必须严格遵守，同 Layer 内不允许有依赖关
 ### Layer 2
 ...
 
-## Task-Commit 对照表
+### Task-Commit 对照表
 | Task | Commit | 含测试 | Worker | Layer | 状态 |
 
-## 并行执行统计
+### 并行执行统计
 - 总 Layer 数: N
 - 总 Worker 数: M
 - 并行 Layer 数: P
 - 效率提升比: ~X 倍
 
-## 交接项
+### 交接项
 - commit 列表（含 hash）
-- TEST_CMD: [测试命令]
 - 测试运行结果摘要
 - 已知遗留问题
 - BLOCKED 任务（如有）

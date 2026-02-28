@@ -315,7 +315,7 @@ graph TB
     ↓
 [日常开发]
     ↓
-/clarify → /explore → /design → /plan → /run-plan 或 /run-plan-parallel
+/prd → /explore → /design → /plan → /run-plan 或 /run-plan-parallel
 ```
 
 `/overview` 是项目接手的第一步，生成的文档可作为后续开发的参考资料。
