@@ -1,6 +1,8 @@
 ---
 name: ux
 user-invocable: true
+disable-model-invocation: true
+allowed-tools: Read, Write, Glob, Grep, WebSearch
 description: |
   交互体验设计与可用性评审。帮助系统性思考用户如何与功能交互，识别体验风险。
   Use when: 新功能需要交互体验设计、已有产品需要可用性评审。
@@ -30,6 +32,7 @@ description: |
 - 输出视觉设计方案（颜色、字体、布局像素值）
 - 对不确定的建议给高信心等级
 - 暴露方法论术语（Nielsen、Fogg、峰终定律、认知负荷等）
+- 修改 master.md 或项目代码文件（Write 仅用于输出 handoff_ux.md）
 
 **REQUIRED**：
 - 每条建议关联到具体的启发式原则或心理学框架（内部标注，不暴露给用户）
@@ -58,7 +61,7 @@ description: |
 
 | 模式 | 触发 | 输入 | 核心动作 | 输出 |
 |------|------|------|---------|------|
-| **交互设计** | 新功能 | master.md 或描述 | 认知走查 + 状态分析 + 体验设计 | 写回 master.md |
+| **交互设计** | 新功能 | master.md 或描述 | 认知走查 + 状态分析 + 体验设计 | handoff_ux.md |
 | **体验评审** | 已有产品/设计 | 功能描述或截图 | Nielsen 评审 + 认知负荷检查 | 问题清单 + 改进建议 |
 
 ### 步骤
@@ -102,7 +105,7 @@ description: |
 - 是否只考虑了一种交互方案？（锚定偏差）
 
 **6. 输出**
-- 有 master.md → 写入"交互体验要点"章节（两层：设计分析 + UX 验收标准）
+- 有 master.md → 输出到 `docs/pipeline/{feature_name}/handoff_ux.md`（两层：设计分析 + UX 验收标准建议）
 - 无 master.md → 对话输出分析结果
 
 ---
@@ -111,15 +114,30 @@ description: |
 
 > 输出模板详见 `references/ux-heuristics.md`
 
-### 写回 master.md 时，输出两层内容
+### 输出到 handoff_ux.md，包含两层内容
 
 **第一层：设计分析**（供 /design 和 /plan 参考）
 - 认知走查表 → /design 理解用户流程
 - 交互状态矩阵 → /design 设计状态管理，/plan 拆解任务
 - 体验要点 → /design 设计反馈机制
 
-**第二层：UX 验收标准**（供 /qa 验证，格式与功能需求一致）
+**第二层：UX 验收标准建议**（供 PRD 决定是否纳入、/qa 验证）
 - 正常/异常/边界格式，与 /qa 现有逻辑兼容
+
+## Step Contract
+
+**输入**：
+- `docs/pipeline/{feature}/master.md`（存在时读取）
+- 若文件不存在，可通过对话了解产品和功能（体验评审模式）
+
+**输出**：
+- `docs/pipeline/{feature}/handoff_ux.md`
+
+**交接项清单（必须显式列出）**：
+- 认知走查表（覆盖正常路径 + 至少 1 条异常路径）
+- 交互状态矩阵（覆盖空态、加载、正常、错误、边界）
+- 体验要点（用户心理状态 + 反馈设计 + 错误恢复）
+- UX 验收标准建议（正常/异常/边界格式）
 
 ---
 
@@ -128,9 +146,10 @@ description: |
 ```
 交互体验分析完成
 
-[有 master.md] 已写入：docs/pipeline/{feature_name}/master.md「交互体验要点」章节
+[有 master.md] 已输出：docs/pipeline/{feature_name}/handoff_ux.md
 [无 master.md] 分析结果已在对话中输出
 
+请审查 handoff_ux.md，关键要点可纳入 master.md「交互体验要点」章节
 涉及用户界面实现？参考 /h5（移动端）或 /admin-ui（后台）设计系统
 下一步：/design（架构设计）
 ```
