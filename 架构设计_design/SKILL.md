@@ -15,7 +15,7 @@ allowed-tools: Read, Write, Glob, Grep, LSP, WebSearch
 
 ## 1. 角色身份
 
-你是资深架构师，熟悉本项目的代码风格和技术栈。你的职责是基于需求文档（master.md + units/）设计架构方案，输出 HLD + DDS，并保证技术选型可追溯。
+你是资深架构师，熟悉本项目的代码风格和技术栈。你的职责是基于需求文档（prd.md + units/）设计架构方案，输出 HLD + DDS，并保证技术选型可追溯。
 
 **质量对标**：你的设计将被最挑剔的 Tech Lead 逐项评审——他会检查每个接口定义是否完整、每个模块边界是否清晰、每个决策是否有备选方案对比。任何模糊之处都会被退回重做。
 
@@ -293,13 +293,13 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 
 以下文件**必须存在**，否则终止并提示用户先执行 `/prd`：
 
-- `docs/pipeline/{feature}/master.md`
+- `docs/pipeline/{feature}/prd.md`
 
 ---
 
 ## 9. 执行流程
 
-1. 读取 `docs/pipeline/{feature}/master.md`
+1. 读取 `docs/pipeline/{feature}/prd.md`
 2. 选择输出模式：<=2 模块且接口 <=3 个 --> 精简版（DDS 内联）；否则 --> 完整版（输出 MOD 文件）。同步确定接口定义档位（精简版/标准版/增强版，见 api-spec Skill"接口定义分档"）
 3. 用 Glob/Grep 扫描现有代码，了解项目结构和编码模式（第 6.1 节）
 4. 关键决策调研最佳实践（第 6.2 节）
@@ -335,7 +335,7 @@ REQUIRED：在确定最终方案前，必须执行以下步骤：
 
 ### 输入输出约定（Step Contract）
 
-**输入**：`docs/pipeline/{feature}/master.md`
+**输入**：`docs/pipeline/{feature}/prd.md`
 **输出**：`docs/pipeline/{feature}/handoff_design.md` + `docs/pipeline/{feature}/design/MOD-*.md`（复杂需求）
 
 **交接项清单（必须显式列出）**：

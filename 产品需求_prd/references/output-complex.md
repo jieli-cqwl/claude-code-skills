@@ -1,10 +1,10 @@
 # 复杂模式输出规范
 
-> 功能点 > 3 个或跨模块时使用。输出 master.md + manifest.json + units/ 目录。
+> 功能点 > 3 个或跨模块时使用。输出 prd.md + manifest.json + units/ 目录。
 
 ---
 
-## master.md 模板
+## prd.md 模板
 
 ```markdown
 # PRD: [功能标题]
@@ -128,7 +128,7 @@
 
 需求：「实现带权限控制的文档协作系统」
 
-### master.md 示例
+### prd.md 示例
 
 ```markdown
 # PRD: 文档协作系统

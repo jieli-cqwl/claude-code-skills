@@ -112,7 +112,7 @@ REVIEW: DESIGN_OK
 REVIEW: DESIGN_ISSUE
 
 ## Issues
-1. [ISSUE-1] master R3 "密码长度>=8" 无对应校验接口
+1. [ISSUE-1] PRD R3 "密码长度>=8" 无对应校验接口
    - 位置：handoff_design.md 接口清单
    - 建议：POST /users 入参增加 password 校验规则
 
@@ -203,7 +203,7 @@ REVIEW: DESIGN_ISSUE
 ### 需求来源
 
 以下文件必须存在：
-- `docs/pipeline/{feature}/master.md`
+- `docs/pipeline/{feature}/prd.md`
 
 以下文件为设计来源：
 - `docs/pipeline/{feature}/handoff_design.md`（必须）
@@ -215,7 +215,7 @@ REVIEW: DESIGN_ISSUE
 
 ### Plan 模式
 
-1. 读取 `docs/pipeline/{feature}/master.md` + `handoff_design.md`（+ `design/MOD-*.md` 如存在）
+1. 读取 `docs/pipeline/{feature}/prd.md` + `handoff_design.md`（+ `design/MOD-*.md` 如存在）
 2. 执行 Design 评审（第 4 节全部流程）
 3. 如 DESIGN_ISSUE，输出评审报告并终止
 4. 如 DESIGN_OK，继续制定计划
@@ -252,7 +252,7 @@ REVIEW: DESIGN_ISSUE
 
 ### 输入输出约定（Step Contract）
 
-**输入**：`docs/pipeline/{feature}/master.md` + `docs/pipeline/{feature}/handoff_design.md`（+ `design/MOD-*.md` 可选）
+**输入**：`docs/pipeline/{feature}/prd.md` + `docs/pipeline/{feature}/handoff_design.md`（+ `design/MOD-*.md` 可选）
 **输出**：`docs/pipeline/{feature}/review_design_N.md`（评审）+ `docs/pipeline/{feature}/handoff_plan.md`（计划）
 
 ### 强制前置条件

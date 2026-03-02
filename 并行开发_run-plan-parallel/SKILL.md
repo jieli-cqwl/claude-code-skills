@@ -39,7 +39,7 @@ ultrathink
 
 1. `docs/pipeline/{feature}/handoff_plan.md` 必须存在。如不存在，请先执行 `/plan`。
 2. `docs/pipeline/{feature}/handoff_design.md` 必须存在。如不存在，请先执行 `/design`。
-3. 需求文档：`docs/pipeline/{feature}/master.md` 必须存在。
+3. 需求文档：`docs/pipeline/{feature}/prd.md` 必须存在。
 
 ---
 

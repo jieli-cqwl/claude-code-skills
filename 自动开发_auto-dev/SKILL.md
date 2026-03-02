@@ -23,7 +23,7 @@ description: |
 
 ## 前置条件
 
-1. `docs/pipeline/{feature}/master.md`（由 `/prd` 生成）必须存在。请先执行 `/prd` 完成需求文档化。
+1. `docs/pipeline/{feature}/prd.md`（由 `/prd` 生成）必须存在。请先执行 `/prd` 完成需求文档化。
 2. 用户确认需求后说"开始"或"执行"。
 3. 若走 Plan Ready 快速入口，需额外满足：
    - `handoff_design.md` + `handoff_plan.md` 已存在
@@ -39,7 +39,7 @@ ultrathink
 
 ```
 Fast Path:
-  A. 检查 master.md / handoff_design.md / handoff_plan.md 均存在
+  A. 检查 prd.md / handoff_design.md / handoff_plan.md 均存在
   B. 标记 design=SKIPPED, plan=SKIPPED
   C. 直接进入步骤 7（/run-plan 或 /run-plan-parallel）
 ```
@@ -150,4 +150,4 @@ Plan Ready 快速入口展示：
 - pipeline.sh 提供更强的加固能力（超时/费用/锁），适合无人值守场景
 - 与脚本编排对齐：使用单版本命令 `bash ~/.claude/pipeline.sh start <feature> <simple|complex>`，随后循环 `run-step`，最后 `finalize`
 - 统一入口层不再接受旧版环境变量式流程参数，避免误触发历史行为
-- 统一格式：`/prd` 输出 `master.md + units/`，下游阶段按单一格式读取
+- 统一格式：`/prd` 输出 `prd.md + units/`，下游阶段按单一格式读取

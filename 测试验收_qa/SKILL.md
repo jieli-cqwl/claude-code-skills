@@ -25,7 +25,7 @@ allowed-tools: Read, Bash, Glob, Grep
 
 ## 2. 行为准则
 
-- **验收标准唯一来源**：`master.md`（含 units/），不是 Plan，不是 Design，不是代码
+- **验收标准唯一来源**：`prd.md`（含 units/），不是 Plan，不是 Design，不是代码
 - **接口信息辅助**：从 `handoff_design.md` 获取接口路径和参数格式
 - **实施约束辅助**：若存在 `design/MOD-*.md`，增加“实施约束验收”（不替代需求验收）
 - **与 Check 差异化**：Check 验"代码质量"，你验"功能是否满足需求"
@@ -40,7 +40,7 @@ allowed-tools: Read, Bash, Glob, Grep
 
 ### 3.1 验收标准唯一来源原则
 
-QA 验收的唯一标准是需求文档（`master.md` + `units/`），不是 Plan，不是 Design，不是代码。
+QA 验收的唯一标准是需求文档（`prd.md` + `units/`），不是 Plan，不是 Design，不是代码。
 
 **为什么**：
 
@@ -52,7 +52,7 @@ QA 验收的唯一标准是需求文档（`master.md` + `units/`），不是 Pla
 
 | 文件 | 用途 | 是否作为验收标准 |
 |------|------|----------------|
-| master.md + units/ | 验收标准（全局约束 + 各 UNIT 规则） | 是 |
+| prd.md + units/ | 验收标准（全局约束 + 各 UNIT 规则） | 是 |
 | handoff_design.md | 获取接口路径、参数格式 | 否（仅获取技术信息） |
 | design/MOD-*.md | 获取实施约束（如错误码、状态流、铁律） | 否（辅助验收） |
 | handoff_run.md | 不读取 | 否（保证独立性） |
@@ -198,13 +198,13 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 以下文件**必须存在**，作为唯一验收标准：
 
-- `docs/pipeline/{feature}/master.md`
+- `docs/pipeline/{feature}/prd.md`
 
 如不存在，请先执行 `/prd`。
 
 **验收策略**：
 
-- 读取 `master.md` 获取全局约束和 UNIT 索引
+- 读取 `prd.md` 获取全局约束和 UNIT 索引
 - 按需加载 `units/UNIT-N.md` 获取各功能规则
 - 按 UNIT 逐个验收，每个 UNIT 的规则逐条 PASS/FAIL
 - 全局约束对所有 UNIT 生效
@@ -213,7 +213,7 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 ## 7. 工作流
 
-1. 读取验收标准文档 `master.md`（含 units/）
+1. 读取验收标准文档 `prd.md`（含 units/）
 2. 读取 `handoff_design.md`（接口信息）+ `design/MOD-*.md`（实施约束，如存在）
 3. 启动真实服务 -> 健康检查
 4. 逐条验证每条规则（按反例 -> 边界 -> 正例顺序）
@@ -238,11 +238,11 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 ```
 输入分析：
-- master 定义 F1 用户注册功能，3 条规则 + 2 个排除项
+- PRD 定义 F1 用户注册功能，3 条规则 + 2 个排除项
 - 从 design 获取接口路径：POST /api/v1/users
 
 验收决策：
-- 以 master 为唯一标准，独立端到端验证
+- 以 PRD 为唯一标准，独立端到端验证
 - 启动服务 -> 逐条验证 -> 停止服务
 
 验收表：

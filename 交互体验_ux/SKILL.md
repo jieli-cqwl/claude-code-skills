@@ -32,7 +32,7 @@ description: |
 - 输出视觉设计方案（颜色、字体、布局像素值）
 - 对不确定的建议给高信心等级
 - 暴露方法论术语（Nielsen、Fogg、峰终定律、认知负荷等）
-- 修改 master.md 或项目代码文件（Write 仅用于输出 handoff_ux.md）
+- 修改 prd.md 或项目代码文件（Write 仅用于输出 handoff_ux.md）
 
 **REQUIRED**：
 - 每条建议关联到具体的启发式原则或心理学框架（内部标注，不暴露给用户）
@@ -61,14 +61,14 @@ description: |
 
 | 模式 | 触发 | 输入 | 核心动作 | 输出 |
 |------|------|------|---------|------|
-| **交互设计** | 新功能 | master.md 或描述 | 认知走查 + 状态分析 + 体验设计 | handoff_ux.md |
+| **交互设计** | 新功能 | prd.md 或描述 | 认知走查 + 状态分析 + 体验设计 | handoff_ux.md |
 | **体验评审** | 已有产品/设计 | 功能描述或截图 | Nielsen 评审 + 认知负荷检查 | 问题清单 + 改进建议 |
 
 ### 步骤
 
 **1. 理解上下文**
-- 有 master.md → 读取，提取用户角色、场景、核心功能点
-- 无 master.md → 通过对话了解产品和功能
+- 有 prd.md → 读取，提取用户角色、场景、核心功能点
+- 无 prd.md → 通过对话了解产品和功能
 - 扫描项目是否使用 /h5 或 /admin-ui 设计系统
 
 **2. 用户心理分析**（内部思考，不暴露术语）
@@ -105,8 +105,8 @@ description: |
 - 是否只考虑了一种交互方案？（锚定偏差）
 
 **6. 输出**
-- 有 master.md → 输出到 `docs/pipeline/{feature_name}/handoff_ux.md`（两层：设计分析 + UX 验收标准建议）
-- 无 master.md → 对话输出分析结果
+- 有 prd.md → 输出到 `docs/pipeline/{feature_name}/handoff_ux.md`（两层：设计分析 + UX 验收标准建议）
+- 无 prd.md → 对话输出分析结果
 
 ---
 
@@ -127,7 +127,7 @@ description: |
 ## Step Contract
 
 **输入**：
-- `docs/pipeline/{feature}/master.md`（存在时读取）
+- `docs/pipeline/{feature}/prd.md`（存在时读取）
 - 若文件不存在，可通过对话了解产品和功能（体验评审模式）
 
 **输出**：
@@ -146,10 +146,10 @@ description: |
 ```
 交互体验分析完成
 
-[有 master.md] 已输出：docs/pipeline/{feature_name}/handoff_ux.md
-[无 master.md] 分析结果已在对话中输出
+[有 prd.md] 已输出：docs/pipeline/{feature_name}/handoff_ux.md
+[无 prd.md] 分析结果已在对话中输出
 
-请审查 handoff_ux.md，关键要点可纳入 master.md「交互体验要点」章节
+请审查 handoff_ux.md，关键要点可纳入 prd.md「交互体验要点」章节
 涉及用户界面实现？参考 /h5（移动端）或 /admin-ui（后台）设计系统
 下一步：/design（架构设计）
 ```

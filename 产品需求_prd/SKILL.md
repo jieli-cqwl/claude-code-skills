@@ -2,7 +2,7 @@
 name: prd
 user-invocable: true
 description: |
-  产品需求发现与文档化。以产品经理视角挖掘真实需求，输出结构化 PRD（master.md + units/）。
+  产品需求发现与文档化。以产品经理视角挖掘真实需求，输出结构化 PRD（prd.md + units/）。
   Use when: 有新需求需要挖掘和文档化、模糊需求需要发现真实意图、复杂需求需要语义拆解。
 ---
 
@@ -129,7 +129,7 @@ description: |
 
 根据模式读取对应的输出规范，写入文件。
 
-**文档保存路径**：`docs/pipeline/{feature_name}/master.md`
+**文档保存路径**：`docs/pipeline/{feature_name}/prd.md`
 **UNIT 目录**：`docs/pipeline/{feature_name}/units/`（复杂模式）
 
 输出前自检：
@@ -146,7 +146,7 @@ description: |
 
 > 模板和示例详见 `references/output-simple.md`
 
-输出：`docs/pipeline/{feature_name}/master.md`
+输出：`docs/pipeline/{feature_name}/prd.md`
 
 ### 复杂模式（UNIT 拆解）
 
@@ -154,7 +154,7 @@ description: |
 > UNIT 格式规范详见 `references/unit-spec.md`
 
 输出：
-- `docs/pipeline/{feature_name}/master.md`（全局视图 + 功能需求索引）
+- `docs/pipeline/{feature_name}/prd.md`（全局视图 + 功能需求索引）
 - `docs/pipeline/{feature_name}/manifest.json`（元数据）
 - `docs/pipeline/{feature_name}/units/UNIT-NNN_标题.md`（每个功能单元）
 
@@ -164,8 +164,8 @@ description: |
 
 在输出"PRD 完成"之前，必须逐项校验：
 
-1. 检查 `docs/pipeline/{feature_name}/master.md` 文件存在且非空
-2. 复杂模式：检查 `units/` 目录下文件与 master.md 索引一致
+1. 检查 `docs/pipeline/{feature_name}/prd.md` 文件存在且非空
+2. 复杂模式：检查 `units/` 目录下文件与 prd.md 索引一致
 3. 每个需求有验收标准（正常 + 异常 + 边界）
 4. 排除项非空
 5. 业务背景和用户故事非空
@@ -177,7 +177,7 @@ description: |
 ```
 PRD 完成
 
-文档已保存至：docs/pipeline/{feature_name}/master.md
+文档已保存至：docs/pipeline/{feature_name}/prd.md
 [复杂模式] UNIT 文件：docs/pipeline/{feature_name}/units/（共 N 个）
 需求：X 个（含验收标准 X 组）
 

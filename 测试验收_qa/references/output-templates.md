@@ -1,14 +1,14 @@
 # 输出模板
 
-## master.md 格式（按 UNIT 验收）
+## prd.md 格式（按 UNIT 验收）
 
-适用条件：master.md 存在时使用此格式
+适用条件：prd.md 存在时使用此格式
 
 ```markdown
 # handoff_qa.md
 
 ## 输入分析
-[master.md 全局约束理解 + UNIT 列表 + design 接口信息获取 + MOD 约束获取（如存在）]
+[prd.md 全局约束理解 + UNIT 列表 + design 接口信息获取 + MOD 约束获取（如存在）]
 
 ## 决策
 [验收方法和流程说明：按 UNIT 逐个验收]

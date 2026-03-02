@@ -232,7 +232,7 @@ REQUIRED：每个 Task 完成后、标记为 DONE 前，执行以下自检：
 
 如不存在，请先执行 `/plan`。
 
-> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/master.md` 中是否包含等价的计划与设计内容。
+> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/prd.md` 中是否包含等价的计划与设计内容。
 
 ---
 

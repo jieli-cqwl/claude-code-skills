@@ -135,7 +135,7 @@ REQUIRED：每个 FAIL 项修复后，执行以下自验：
 
 如不存在，请先执行 `/check` 或 `/qa`。
 
-> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/master.md` 中是否包含等价的 FAIL 报告。
+> 备用路径：如果 pipeline 目录不存在，检查 `docs/{feature}/prd.md` 中是否包含等价的 FAIL 报告。
 
 > 例外：若为 Check 阶段的 Fix-pre，仅提供 handoff_check.md 时，必须明确标注"缺失 handoff_qa"并仅基于现有 FAIL 项修复。
 
