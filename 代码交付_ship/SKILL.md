@@ -1,7 +1,6 @@
 ---
 name: ship
-command: ship
-user_invocable: true
+user-invocable: true
 description: |
   代码交付。专注 commit / pull --rebase / push，冲突即停，不自动改冲突。
   Use when: 提交代码、推送远程、开发完成准备交付。

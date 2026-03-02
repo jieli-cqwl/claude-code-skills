@@ -1,17 +1,15 @@
 ---
 name: run-plan
 description: |
-  执行计划。在隔离上下文中按计划严格 TDD 实现代码，同时负责 Plan 评审。
+  执行计划。按计划严格 TDD 实现代码，同时负责 Plan 评审。
   Use when: 开始开发、执行计划、按计划实现。前置条件：需先完成 /plan。
-context: fork
-agent: pipeline-implementer
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, LSP
 ---
-
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-implementer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep, LSP。参见 agents/pipeline-implementer.md 的 allowedTools 定义 -->
 
 # /run-plan -- 执行开发计划
 
-> 在隔离上下文中按 Plan 任务清单严格 TDD 执行开发。同时负责评审 Plan 文档。
+> 按 Plan 任务清单严格 TDD 执行开发。同时负责评审 Plan 文档。
 
 ---
 

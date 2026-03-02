@@ -1,8 +1,6 @@
 ---
 name: refactor
-command: refactor
-user_invocable: true
-parallel_mode: true
+user-invocable: true
 description: |
   代码重构。遵循简单/合适/演化原则，自动识别语言并应用对应的重构规则。
   Use when: 重构代码、优化代码结构、代码混乱需要整理、发现过度设计。

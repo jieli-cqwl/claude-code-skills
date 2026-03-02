@@ -1,7 +1,6 @@
 ---
 name: scan
-command: scan
-user_invocable: true
+user-invocable: true
 description: |
   代码质量扫描。扫描项目整体代码质量，输出健康度评分和分级问题清单。
   Use when: 了解代码质量或技术债、接手新项目、定期巡检。用法：/scan [项目路径]

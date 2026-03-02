@@ -1,7 +1,6 @@
 ---
 name: prompt
-command: prompt
-user_invocable: true
+user-invocable: true
 description: |
   提示词工程。运用最佳实践技巧组合，生成高质量的结构化提示词。
   Use when: 编写或优化提示词、讨论如何让 AI 更好地完成任务。

@@ -1,8 +1,6 @@
 ---
 name: run-plan-parallel
-command: run-plan-parallel
-user_invocable: true
-parallel_mode: true
+user-invocable: true
 description: |
   并行执行计划。分析任务依赖图，按 Layer 并行启动多个 pipeline-implementer SubAgent 加速开发。
   Use when: 大型 Plan 需要并行开发、4+ Tasks 有并行候选组。前置条件：需先完成 /plan。

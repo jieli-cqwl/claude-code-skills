@@ -1,7 +1,6 @@
 ---
 name: worktree
-command: worktree
-user_invocable: true
+user-invocable: true
 description: |
   Git Worktree 分支隔离。为开发任务创建隔离的工作目录，避免影响主分支。
   Use when: 隔离开发、并行开发多个功能、不想影响主分支、大型重构需要隔离环境。

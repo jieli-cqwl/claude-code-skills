@@ -1,7 +1,6 @@
 ---
 name: h5
-command: h5
-user_invocable: true
+user-invocable: true
 description: |
   H5 移动端交互体验优化（UniApp + Vue3）。提供 60fps 动画、触摸反馈、容错交互的开发规范。
   Use when: 开发 H5 组件或移动端页面、讨论触摸交互/手势/动画、处理加载状态或表单验证。

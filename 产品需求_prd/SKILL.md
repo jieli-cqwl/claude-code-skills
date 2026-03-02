@@ -1,7 +1,8 @@
 ---
 name: prd
-command: prd
-user_invocable: true
+user-invocable: true
+context: fork
+agent: plan
 description: |
   产品需求文档化。以产品经理视角分析需求，输出结构化 PRD（master.md + units/）。
   Use when: 需求已明确但需要结构化文档、复杂需求需要语义拆解、将需求结构化为可执行的 PRD。

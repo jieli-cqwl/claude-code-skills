@@ -1,17 +1,15 @@
 ---
 name: plan
 description: |
-  编写实施计划。在隔离上下文中启动 pipeline-planner SubAgent 进行任务拆分。
+  编写实施计划。将架构蓝图拆分为可执行的开发任务，同时负责评审 Design 文档。
   Use when: 拆分任务、写开发计划、/design 完成后进入计划阶段。前置条件：需先完成 /design。
-context: fork
-agent: pipeline-planner
+disable-model-invocation: true
+allowed-tools: Read, Write, Glob, Grep
 ---
-
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-planner 执行。SubAgent 可用工具：Read, Write, Glob, Grep。参见 agents/pipeline-planner.md 的 allowedTools 定义 -->
 
 # /plan -- 编写实施计划
 
-> 在隔离上下文中将架构蓝图拆分为可执行的开发任务。同时负责评审 Design 文档。
+> 将架构蓝图拆分为可执行的开发任务。同时负责评审 Design 文档。
 
 ---
 

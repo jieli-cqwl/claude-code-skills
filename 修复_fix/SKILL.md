@@ -1,17 +1,15 @@
 ---
 name: fix
 description: |
-  修复问题。在隔离上下文中根因分析和最小修复。
+  修复问题。根因分析和最小修复。
   Use when: /check 或 /qa 发现 FAIL 项需要修复、用户指出具体 bug。前置条件：需有 FAIL 报告。
-context: fork
-agent: pipeline-fixer
+disable-model-invocation: true
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, LSP
 ---
-
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-fixer 执行。SubAgent 可用工具：Read, Write, Edit, Bash, Glob, Grep, LSP。参见 agents/pipeline-fixer.md 的 allowedTools 定义 -->
 
 # /fix -- 问题修复
 
-> 在隔离上下文中修复 QA 和 Check 发现的问题。每个修复经过根因分析，附带回归测试，确认不引入新问题。
+> 修复 QA 和 Check 发现的问题。每个修复经过根因分析，附带回归测试，确认不引入新问题。
 
 ---
 

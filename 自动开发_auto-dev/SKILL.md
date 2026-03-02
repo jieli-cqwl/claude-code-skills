@@ -1,7 +1,6 @@
 ---
 name: auto-dev
-command: auto-dev
-user_invocable: true
+user-invocable: true
 description: |
   全流程自动开发编排。依次触发 SubAgent 完成 design → plan → run-plan/run-plan-parallel → check → qa 全流程。
   Use when: 一键自动化完整开发流程。
@@ -9,7 +8,7 @@ description: |
 
 # /auto-dev -- 全流程自动开发
 
-> 在主对话中编排完整的开发流程，依次触发各阶段 SubAgent 在隔离上下文中执行。
+> 在主对话中编排完整的开发流程，通过 Task 工具依次启动各 pipeline agent 执行。
 > 适用于中大型需求的完整开发流程。小需求请直接使用单个 Skill。
 
 ## 熔断机制
@@ -51,8 +50,8 @@ Fast Path:
 
 ```
 Design 评审循环（最多 3 轮）:
-  1. /design → pipeline-designer 输出 handoff_design.md
-  2. /plan（评审模式）→ pipeline-planner 评审 Design
+  1. Task(pipeline-designer) 输出 handoff_design.md
+  2. Task(pipeline-planner, 评审模式) 评审 Design
      - DESIGN_OK → 进入下一步
      - DESIGN_ISSUE → 回到步骤 1（传入评审反馈）
   3. 循环超过 3 轮 → 暂停，请用户介入
@@ -60,8 +59,8 @@ Design 评审循环（最多 3 轮）:
 [人工确认检查点] 展示 Design 产出，等待用户确认后继续
 
 Plan 评审循环（最多 3 轮）:
-  4. /plan → pipeline-planner 输出 handoff_plan.md
-  5. /run-plan（评审模式）→ pipeline-implementer 评审 Plan
+  4. Task(pipeline-planner) 输出 handoff_plan.md
+  5. Task(pipeline-implementer, 评审模式) 评审 Plan
      - PLAN_OK → 进入下一步
      - PLAN_ISSUE → 回到步骤 4（传入评审反馈）
   6. 循环超过 3 轮 → 暂停，请用户介入
@@ -77,16 +76,16 @@ Plan 评审循环（最多 3 轮）:
 
 | 条件 | 路由 | 说明 |
 |------|------|------|
-| Tasks <= 3 | /run-plan（串行） | 小任务串行更简单可靠 |
+| Tasks <= 3 | Task(pipeline-implementer)（串行） | 小任务串行更简单可靠 |
 | Tasks > 3 且有并行候选组（同 Layer 无 shared_files 交集的 >= 2 Tasks） | /run-plan-parallel（并行） | 大任务并行提效 |
-| Tasks > 3 但全链式依赖 | /run-plan（串行） | 无并行机会 |
+| Tasks > 3 但全链式依赖 | Task(pipeline-implementer)（串行） | 无并行机会 |
 
 ```
 Implement-Check 循环（最多 3 轮）:
-  7. 按路由结果执行 /run-plan 或 /run-plan-parallel → 输出 handoff_run.md
-  8. /check → pipeline-checker 输出 handoff_check.md
+  7. 按路由结果执行 Task(pipeline-implementer) 或 /run-plan-parallel → 输出 handoff_run.md
+  8. Task(pipeline-checker) 输出 handoff_check.md
      - 全部 PASS → 进入 QA
-     - 有 FAIL → /fix 修复 → 回到步骤 7
+     - 有 FAIL → Task(pipeline-fixer) 修复 → 回到步骤 7
   9. 循环超过 3 轮 → 暂停，请用户介入
 ```
 
@@ -94,11 +93,11 @@ Implement-Check 循环（最多 3 轮）:
 
 ```
 QA-Fix 循环（最多 10 轮）:
-  10. /qa → pipeline-qa 输出 handoff_qa.md
+  10. Task(pipeline-qa) 输出 handoff_qa.md
       - PASS → 流程完成
       - FAIL → 进入修复
-  11. /fix → pipeline-fixer 修复 FAIL 项
-  12. /check → pipeline-checker 验证修复
+  11. Task(pipeline-fixer) 修复 FAIL 项
+  12. Task(pipeline-checker) 验证修复
   13. 回到步骤 10
   14. >= 5 轮 → 暂停，请用户介入
   15. >= 10 轮 → 终止，报告无法自动修复
@@ -145,7 +144,7 @@ Plan Ready 快速入口展示：
 
 ## 注意事项
 
-- 每个阶段都在隔离上下文中执行（context: fork），不会污染主对话
+- 每个阶段通过 Task 工具启动对应 pipeline agent 执行，不会污染主对话
 - 阶段间通过 Handoff 文件传递信息
 - 评审循环确保上游产出质量，避免低质量产出传递到下游
 - pipeline.sh 提供更强的加固能力（超时/费用/锁），适合无人值守场景

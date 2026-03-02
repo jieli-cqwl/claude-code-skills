@@ -1,7 +1,6 @@
 ---
 name: mcp-builder
-command: mcp-builder
-user_invocable: true
+user-invocable: true
 description: |
   MCP 服务器开发指南。构建让 LLM 与外部服务交互的 Model Context Protocol 服务器。
   Use when: 开发 MCP server、集成外部 API 给 AI 用、需要 LLM 调用外部服务。

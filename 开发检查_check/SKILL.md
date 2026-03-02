@@ -1,17 +1,15 @@
 ---
 name: check
 description: |
-  开发检查。在隔离上下文中启动 pipeline-checker SubAgent 做五维代码质量检查与设计约束合规核查。
+  开发检查。五维代码质量检查与设计约束合规核查。
   Use when: 检查代码质量、开发完成准备验证。前置条件：需先完成 /run-plan 或 /run-plan-parallel。
-context: fork
-agent: pipeline-checker
+disable-model-invocation: true
+allowed-tools: Read, Bash, Glob, Grep, LSP
 ---
-
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-checker 执行。SubAgent 可用工具：Read, Bash, Glob, Grep, LSP。参见 agents/pipeline-checker.md 的 allowedTools 定义 -->
 
 # /check -- 开发检查
 
-> 在隔离上下文中执行五维代码质量检查，并追加设计约束合规专项核查。
+> 执行五维代码质量检查，并追加设计约束合规专项核查。
 
 ---
 

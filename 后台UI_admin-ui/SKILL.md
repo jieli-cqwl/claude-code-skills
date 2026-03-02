@@ -1,7 +1,6 @@
 ---
 name: admin-ui
-command: admin-ui
-user_invocable: true
+user-invocable: true
 description: |
   Ant Design 后台管理 UI 开发。提供页面布局、表格、表单、弹窗组件规范和交互模式最佳实践。
   Use when: 开发后台管理页面、使用 Ant Design 组件、讨论数据展示或筛选功能。

@@ -1,17 +1,15 @@
 ---
 name: qa
 description: |
-  测试验收。在隔离上下文中启动 pipeline-qa SubAgent 做端到端功能验收。
+  测试验收。从用户视角端到端验证功能是否满足需求。
   Use when: 测试功能、验收、端到端测试、/check 通过后验证正确性。前置条件：需先完成 /prd。
-context: fork
-agent: pipeline-qa
+disable-model-invocation: true
+allowed-tools: Read, Bash, Glob, Grep
 ---
-
-<!-- 权限说明：本 Skill 通过 SubAgent pipeline-qa 执行。SubAgent 可用工具：Read, Bash, Glob, Grep。参见 agents/pipeline-qa.md 的 allowedTools 定义 -->
 
 # /qa -- 测试验收
 
-> 在隔离上下文中从用户视角端到端验证功能是否满足需求。
+> 从用户视角端到端验证功能是否满足需求。
 
 ---
 
