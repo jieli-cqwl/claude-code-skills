@@ -184,4 +184,5 @@ PRD 完成
 下一步：
 - 启动自动流程：bash ~/.claude/pipeline.sh start "{feature_name}" [simple|complex]
 - 或手动执行：/design（架构设计）
+- 涉及用户界面交互？建议使用 /ux 进行交互体验设计
 ```
