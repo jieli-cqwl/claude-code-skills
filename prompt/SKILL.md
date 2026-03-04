@@ -61,7 +61,7 @@ description: |
 
 ### 第二步：技巧选择
 
-读取 `~/.claude/skills/提示词工程_prompt/references/technique-catalog.md`，根据特征标签从技巧索引中路由最优 2-4 种组合。
+读取 `~/.claude/skills/prompt/references/technique-catalog.md`，根据特征标签从技巧索引中路由最优 2-4 种组合。
 
 **技巧选择矩阵**：
 
@@ -103,7 +103,7 @@ description: |
 
 ### 第三步：生成提示词
 
-读取 `~/.claude/skills/提示词工程_prompt/references/output-templates.md`，根据使用方式选择对应模板。
+读取 `~/.claude/skills/prompt/references/output-templates.md`，根据使用方式选择对应模板。
 
 **模板选择**：
 

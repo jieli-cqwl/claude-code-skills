@@ -1,10 +1,10 @@
-<!-- SUPERSEDED: 2026-02-25 | 并行编排逻辑已迁移至 /run-plan-parallel (skills/并行开发_run-plan-parallel/SKILL.md)。本文件保留供参考，不再作为执行指南。 -->
+<!-- SUPERSEDED: 2026-02-25 | 并行编排逻辑已迁移至 /run-plan-parallel (skills/run-plan-parallel/SKILL.md)。本文件保留供参考，不再作为执行指南。 -->
 
 # Tech Lead 操作手册
 
 > 执行计划时，Tech Lead（你）的详细操作指南
 > **版本**：v3.1
-> **本文件路径**：`~/.claude/skills/执行计划_run-plan/prompts/tech-lead.md`
+> **本文件路径**：`~/.claude/skills/run-plan/prompts/tech-lead.md`
 
 ---
 
@@ -88,7 +88,7 @@ echo "✅ 所有门控检查通过，可以继续执行"
 ## ⚠️ 前置条件
 
 在阅读本手册之前，你应该已经：
-1. 读取了 `~/.claude/skills/执行计划_run-plan/SKILL.md`（入口文件）
+1. 读取了 `~/.claude/skills/run-plan/SKILL.md`（入口文件）
 2. 理解了执行模式和核心原则
 3. **通过了门控检查**（见上文）
 
@@ -230,10 +230,10 @@ mypy app/shared/ --ignore-missing-imports
 
 ```bash
 # 读取 Implementer 规范模板
-cat ~/.claude/skills/执行计划_run-plan/prompts/implementer.md
+cat ~/.claude/skills/run-plan/prompts/implementer.md
 ```
 
-**文件路径**：`~/.claude/skills/执行计划_run-plan/prompts/implementer.md`
+**文件路径**：`~/.claude/skills/run-plan/prompts/implementer.md`
 
 ### 4.2 组装任务参数
 

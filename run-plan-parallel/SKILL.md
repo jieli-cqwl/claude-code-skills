@@ -31,7 +31,7 @@ ultrathink
 - 每个 Worker prompt 必须包含全局上下文（完整 Plan 摘要 + 所有 Task 的文件范围表 + Design 接口定义）
 - Layer 完成后必须全量测试
 - 每个 Worker 使用 `subagent_type: "pipeline-implementer"`
-- Worker prompt 必须基于 `~/.claude/skills/执行计划_run-plan/prompts/implementer.md` 模板组装
+- Worker prompt 必须基于 `~/.claude/skills/run-plan/prompts/implementer.md` 模板组装
 
 ---
 
@@ -121,7 +121,7 @@ Layer 2 (串行): Task-5
 
 **5.1 组装 Worker prompt**
 
-读取 `~/.claude/skills/执行计划_run-plan/prompts/implementer.md` 获取模板，为每个 Task 组装完整 prompt：
+读取 `~/.claude/skills/run-plan/prompts/implementer.md` 获取模板，为每个 Task 组装完整 prompt：
 
 ```
 [implementer.md 模板内容]

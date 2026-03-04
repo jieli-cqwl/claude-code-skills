@@ -42,12 +42,12 @@
 
 | Agent | User Skill | 吸收的 Methodology | Agent→Skill 迁移内容 |
 |-------|-----------|-------------------|---------------------|
-| pipeline-designer | 架构设计_design | arch-methodology | 角色身份、设计原则(简单/合适/演化)、设计思维框架、锚定偏差对抗、负向约束 |
-| pipeline-planner | 写计划_plan | review-standard(Design评审)、arch-methodology(部分) | 角色身份、精度意识、负向约束 |
-| pipeline-implementer | 执行计划_run-plan | tdd-methodology、code-quality(子集) | 角色身份、TDD行为准则、提交前自检、负向约束 |
-| pipeline-checker | 开发检查_check | code-quality、review-standard(对抗性思维+偏差检测) | 角色身份、竞争框架、认知偏差对抗、负向约束 |
-| pipeline-qa | 测试验收_qa | qa-methodology | 角色身份、用户共情+竞争框架、偏差对抗、验证顺序、负向约束 |
-| pipeline-fixer | 修复_fix | tdd-methodology(修复变体)、code-quality(子集) | 角色身份、紧迫感框架、修复三问、N>1策略、负向约束 |
+| pipeline-designer | design | arch-methodology | 角色身份、设计原则(简单/合适/演化)、设计思维框架、锚定偏差对抗、负向约束 |
+| pipeline-planner | plan | review-standard(Design评审)、arch-methodology(部分) | 角色身份、精度意识、负向约束 |
+| pipeline-implementer | run-plan | tdd-methodology、code-quality(子集) | 角色身份、TDD行为准则、提交前自检、负向约束 |
+| pipeline-checker | check | code-quality、review-standard(对抗性思维+偏差检测) | 角色身份、竞争框架、认知偏差对抗、负向约束 |
+| pipeline-qa | qa | qa-methodology | 角色身份、用户共情+竞争框架、偏差对抗、验证顺序、负向约束 |
+| pipeline-fixer | fix | tdd-methodology(修复变体)、code-quality(子集) | 角色身份、紧迫感框架、修复三问、N>1策略、负向约束 |
 
 **Agent 保留内容**（~25行/个）：frontmatter + Step Contract（双格式输入）+ 交付模板
 
@@ -59,12 +59,12 @@
 
 | # | 文件 | 操作 |
 |---|------|------|
-| 1 | `~/.claude/skills/产品需求_prd/SKILL.md` | 新建 → 后续重构（输出格式改为条件引用 output-simple/output-complex，清理 /prd 引用） |
-| 2 | `~/.claude/skills/产品需求_prd/references/product-methodology.md` | 新建 → 后续修改（删除"与 /prd 的关系"章节） |
-| 3 | `~/.claude/skills/产品需求_prd/references/unit-spec.md` | 新建 → 后续修改（标题改为"与旧格式"） |
-| 4 | `~/.claude/skills/产品需求_prd/references/examples.md` | 新建 → **已删除**（内容拆分到 output-simple/output-complex） |
-| 4a | `~/.claude/skills/产品需求_prd/references/output-simple.md` | 新建（简单模式输出规范） |
-| 4b | `~/.claude/skills/产品需求_prd/references/output-complex.md` | 新建（复杂模式输出规范） |
+| 1 | `~/.claude/skills/prd/SKILL.md` | 新建 → 后续重构（输出格式改为条件引用 output-simple/output-complex，清理 /prd 引用） |
+| 2 | `~/.claude/skills/prd/references/product-methodology.md` | 新建 → 后续修改（删除"与 /prd 的关系"章节） |
+| 3 | `~/.claude/skills/prd/references/unit-spec.md` | 新建 → 后续修改（标题改为"与旧格式"） |
+| 4 | `~/.claude/skills/prd/references/examples.md` | 新建 → **已删除**（内容拆分到 output-simple/output-complex） |
+| 4a | `~/.claude/skills/prd/references/output-simple.md` | 新建（简单模式输出规范） |
+| 4b | `~/.claude/skills/prd/references/output-complex.md` | 新建（复杂模式输出规范） |
 
 ### Phase 2：Runtime 双格式适配（3 个文件修改）
 
@@ -78,12 +78,12 @@
 
 | # | 文件 | 吸收来源 |
 |---|------|---------|
-| 8 | `~/.claude/skills/架构设计_design/SKILL.md` | 当前 SKILL + pipeline-designer 能力 + arch-methodology |
-| 9 | `~/.claude/skills/写计划_plan/SKILL.md` | 当前 SKILL + pipeline-planner 能力 + review-standard(Design评审) |
-| 10 | `~/.claude/skills/执行计划_run-plan/SKILL.md` | 当前 SKILL + pipeline-implementer 能力 + tdd-methodology + code-quality(自检子集) |
-| 11 | `~/.claude/skills/开发检查_check/SKILL.md` | 当前 SKILL + pipeline-checker 能力 + code-quality + review-standard(对抗性+偏差) |
-| 12 | `~/.claude/skills/测试验收_qa/SKILL.md` | 当前 SKILL + pipeline-qa 能力 + qa-methodology + 双格式验收 |
-| 13 | `~/.claude/skills/修复_fix/SKILL.md` | 当前 SKILL + pipeline-fixer 能力 + tdd-methodology(修复变体) + code-quality(子集) |
+| 8 | `~/.claude/skills/design/SKILL.md` | 当前 SKILL + pipeline-designer 能力 + arch-methodology |
+| 9 | `~/.claude/skills/plan/SKILL.md` | 当前 SKILL + pipeline-planner 能力 + review-standard(Design评审) |
+| 10 | `~/.claude/skills/run-plan/SKILL.md` | 当前 SKILL + pipeline-implementer 能力 + tdd-methodology + code-quality(自检子集) |
+| 11 | `~/.claude/skills/check/SKILL.md` | 当前 SKILL + pipeline-checker 能力 + code-quality + review-standard(对抗性+偏差) |
+| 12 | `~/.claude/skills/qa/SKILL.md` | 当前 SKILL + pipeline-qa 能力 + qa-methodology + 双格式验收 |
+| 13 | `~/.claude/skills/fix/SKILL.md` | 当前 SKILL + pipeline-fixer 能力 + tdd-methodology(修复变体) + code-quality(子集) |
 
 ### Phase 4：Agent 瘦身（6 个 Agent 重写，~25行/个）
 
@@ -100,18 +100,18 @@
 
 | # | Claude 侧目录 | Codex 侧目录 | 已吸收到 |
 |---|--------------|-------------|---------|
-| 20 | `~/.claude/skills/_验收方法论_qa-methodology/` | `~/.codex/skills/_验收方法论_qa-methodology/` | 测试验收_qa |
-| 21 | `~/.claude/skills/_架构方法论_arch-methodology/` | `~/.codex/skills/_架构方法论_arch-methodology/` | 架构设计_design + 写计划_plan |
-| 22 | `~/.claude/skills/_TDD方法论_tdd-methodology/` | `~/.codex/skills/_TDD方法论_tdd-methodology/` | 执行计划_run-plan + 修复_fix |
-| 23 | `~/.claude/skills/_质量标准_code-quality/` | `~/.codex/skills/_质量标准_code-quality/` | 开发检查_check + 执行计划_run-plan + 修复_fix |
-| 24 | `~/.claude/skills/_评审标准_review-standard/` | `~/.codex/skills/_评审标准_review-standard/` | 写计划_plan + 开发检查_check |
+| 20 | `~/.claude/skills/_验收方法论_qa-methodology/` | `~/.codex/skills/_验收方法论_qa-methodology/` | qa |
+| 21 | `~/.claude/skills/_架构方法论_arch-methodology/` | `~/.codex/skills/_架构方法论_arch-methodology/` | design + plan |
+| 22 | `~/.claude/skills/_TDD方法论_tdd-methodology/` | `~/.codex/skills/_TDD方法论_tdd-methodology/` | run-plan + fix |
+| 23 | `~/.claude/skills/_质量标准_code-quality/` | `~/.codex/skills/_质量标准_code-quality/` | check + run-plan + fix |
+| 24 | `~/.claude/skills/_评审标准_review-standard/` | `~/.codex/skills/_评审标准_review-standard/` | plan + check |
 
 ### Phase 6：下游适配（2 个文件修改）
 
 | # | 文件 | 改动 |
 |---|------|------|
-| 25 | `~/.claude/skills/自动开发_auto-dev/SKILL.md` | 前置条件双格式 + /prd 入口 |
-| 26 | `~/.claude/skills/并行开发_run-plan-parallel/SKILL.md` | 输入说明更新 |
+| 25 | `~/.claude/skills/auto-dev/SKILL.md` | 前置条件双格式 + /prd 入口 |
+| 26 | `~/.claude/skills/run-plan-parallel/SKILL.md` | 输入说明更新 |
 
 ### Phase 7：Codex 同步
 
@@ -142,12 +142,12 @@
 
 | Skill | 模板数 | 提取文件 |
 |-------|--------|---------|
-| 架构设计_design | 2（精简版+完整版） | `references/output-templates.md` |
-| 写计划_plan | 2（Plan输出+Design评审输出） | `references/output-templates.md` |
-| 执行计划_run-plan | 2（执行输出+Plan评审输出） | `references/output-templates.md` |
-| 测试验收_qa | 2（master.md格式+prd格式） | `references/output-templates.md` |
+| design | 2（精简版+完整版） | `references/output-templates.md` |
+| plan | 2（Plan输出+Design评审输出） | `references/output-templates.md` |
+| run-plan | 2（执行输出+Plan评审输出） | `references/output-templates.md` |
+| qa | 2（master.md格式+prd格式） | `references/output-templates.md` |
 
-不提取：开发检查_check（单一输出格式）、修复_fix（单一输出格式）。
+不提取：check（单一输出格式）、fix（单一输出格式）。
 
 ### Phase 10：删除 legacy + product Skills
 
@@ -155,9 +155,9 @@
 
 | 目录 | 侧 |
 |------|-----|
-| `~/.claude/skills/产品需求_prd/` | Claude |
+| `~/.claude/skills/prd/` | Claude |
 | `~/.claude/skills/产品设计_product/` | Claude |
-| `~/.codex/skills/产品需求_prd/` | Codex |
+| `~/.codex/skills/prd/` | Codex |
 | `~/.codex/skills/产品设计_product/` | Codex |
 
 **引用更新（统一到 `/prd`）**：8 个 SKILL.md 文件中的命令引用已标准化。保留 `master.md` 文件名引用（双格式向后兼容）。

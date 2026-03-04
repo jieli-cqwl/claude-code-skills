@@ -4,7 +4,7 @@
 >
 > **用途**：Tech Lead 读取本文件内容，组装成子代理的完整 prompt 后发送给子代理
 > **加载时机**：Tech Lead 在派发任务时读取
-> **文件路径**：`~/.claude/skills/执行计划_run-plan/prompts/implementer.md`
+> **文件路径**：`~/.claude/skills/run-plan/prompts/implementer.md`
 >
 > **版本**：v3.1（多人协作 + 严格 TDD + 完成前验证）
 
